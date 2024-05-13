@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  # clickhouse:
+  #   image: yandex/clickhouse-server:latest
+  #   container_name: clickhouse
+  #   ports:
+  #     - "8123:8123"
+  #     - "9000:9000"
+  #     - "9009:9009"
+  #   environment:
+  #     - CLICKHOUSE_CONFIG_DIR=/etc/clickhouse-server/config.d
+  #     - CLICKHOUSE_PATH=/var/lib/clickhouse
+  #   volumes:
+  #     - clickhouse_data:/var/lib/clickhouse
+  #     - ./clickhouse/config:/etc/clickhouse-server/config.d
+
+# volumes:
+#   clickhouse_data:

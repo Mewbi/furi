@@ -1,99 +1,50 @@
+mod handlers;
+
+use handlers::{get_url, create_url, status};
 use axum::{
-    response::{Response, IntoResponse},
     routing::{get, post},
-    http::{StatusCode},
-    Json,
-    Router,
-    extract::{State, Path}
+    Router
 };
-use serde::{Deserialize, Serialize};
 use tower_http::trace::TraceLayer;
 use std::sync::Arc;
 
-#[derive(Serialize)]
-struct Message {
-    message: String
-}
-
-enum ApiResponse {
-    OK,
-    Created,
-    JsonData(Vec<Message>),
-}
-
-impl IntoResponse for ApiResponse {
-    fn into_response(self) -> Response {
-        match self {
-            Self::OK => (StatusCode::OK).into_response(),
-            Self::Created => (StatusCode::CREATED).into_response(),
-            Self::JsonData(data) => (StatusCode::OK, Json(data)).into_response()
-        }
-    }
-}
-
-enum ApiError {
-    BadRequest,
-    Forbidden,
-    Unauthorised,
-    InternalServerError
-}
+use bb8::Pool;
+use bb8_redis::RedisConnectionManager;
+use bb8_redis::bb8;
 
 #[derive(Debug)]
 struct AppState {
-    // will have db connection
-    name: String
+    redis: Pool<RedisConnectionManager>
 }
 
-#[derive(Deserialize)]
-struct Url {
-    url: String
-}
 
 fn init_router(state: Arc<AppState>) -> Router {
     Router::new()
+        .route("/", get(status))
         .route("/:id", get(get_url))
         .route("/url", post(create_url))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
 }
 
-fn init_state() -> Arc<AppState> {
-    Arc::new(AppState { name: "Databases poggers".to_string() } )
+async fn init_state() -> Arc<AppState> {
+    let manager = RedisConnectionManager::new("redis://localhost").unwrap();
+    let pool = bb8::Pool::builder().build(manager).await.unwrap();
+
+    Arc::new(AppState { 
+        redis: pool,
+    })
 }
 
-async fn get_url(
-    Path(id): Path<String>,
-    State(state): State<Arc<AppState>>
-) -> // Result<ApiResponse, ApiError> 
-    &'static str {
-    println!("{:?}", state);
-    println!("{}", id);
-    // if state.name == "err" {
-    //     return Err(ApiError::InternalServerError);
-    // }
-    // Ok(ApiResponse::OK)
-    "Tome"
-}
-
-async fn create_url(
-    State(state): State<Arc<AppState>>,
-    Json(data): Json<Url>
-) -> // Result<ApiResponse, ApiError>
-    &'static str {
-    println!("{:?}", state);
-    println!("{}", data.url);
-    //Ok(ApiResponse::Created)
-    "Hello"
-}
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).init();
 
-    let state = init_state();
+    let state = init_state().await;
     let app = init_router(state);
 
-    // run our app with hyper, listening globally on port 3000
+    println!("i'm initing poggers in :3000");
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
