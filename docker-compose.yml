@@ -7,6 +7,16 @@ services:
     ports:
       - "6379:6379"
 
+  postgres:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: data
+    ports:
+      - "5432:5432"
+
   # clickhouse:
   #   image: yandex/clickhouse-server:latest
   #   container_name: clickhouse

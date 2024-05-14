@@ -77,12 +77,23 @@ pub async fn get_url(
     println!("{}", id);
 
     let mut conn = state.redis.get().await.map_err(internal_error)?;
-    let result: String = conn.get(id).await.map_err(internal_error)?;
+    let result: String = conn.get(&id).await.unwrap_or_else(|_| {
+        String::new()
+    });
     if result.len() != 0 {
         return Ok(ApiResponse::Redirect(result));
     }
 
-    let url = "https://github.com/Mewbi".to_string();
+    let conn = state.postgres.get().await.map_err(internal_error)?;
+    let row = conn
+        .query_one("SELECT url FROM uris WHERE uri = $1", &[&id])
+        .await
+        .map_err(internal_error)?;
+    let url: String = row.try_get(0).map_err(internal_error)?;
+
+    let mut conn_red = state.redis.get().await.unwrap();
+    conn_red.set_ex::<&str, &str, ()>(&id, &url, 3600).await.unwrap();
+
     Ok(ApiResponse::Redirect(url))
 }
 
@@ -93,11 +104,18 @@ pub async fn create_url(
     println!("{:?}", state);
     println!("{}", data.url);
 
-    let url = Url::parse(&data.url); // TODO: Falta dar um matching
+    let url = Url::parse(&data.url).unwrap();
 
     let uri = random_uri(7);
-    let short_url = "https://furi.me/".to_string() + &uri;
-    let msg = ShortenerMessage { original_url: "https://original.com.br".to_string(), short_url: short_url };
+
+    let conn = state.postgres.get().await.map_err(internal_error)?;
+    let sql = "INSERT INTO uris (uri, url, created_at) VALUES ($1, $2, now())";
+    let stmt = conn.prepare(sql).await.map_err(internal_error)?;
+
+    conn.execute(&stmt, &[&uri, &url.to_string()]).await.map_err(internal_error)?;
+
+    let short_url = format!("http://{}:{}/{}", state.server.host, state.server.port, uri);
+    let msg = ShortenerMessage { original_url: url.to_string(), short_url: short_url };
     Ok(ApiResponse::Created(msg))
 }
 
