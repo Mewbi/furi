@@ -7,7 +7,6 @@ use axum::{
 
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use redis::AsyncCommands;
 
 use url::Url;
 use rand::{distributions::Alphanumeric, Rng};
@@ -21,8 +20,8 @@ pub struct Message {
 
 #[derive(Serialize)]
 pub struct ShortenerMessage {
-    original_url: String,
-    short_url: String
+    pub original_url: String,
+    pub short_url: String
 }
 
 pub enum ApiResponse {
@@ -73,50 +72,36 @@ pub async fn get_url(
         return Err(ApiError::BadRequest);
     }
 
-    println!("{:?}", state);
-    println!("{}", id);
+    match state.get_url_from_db(&id).await {
+        Ok(url) => {
+            return Ok(ApiResponse::Redirect(url));
+        },
 
-    let mut conn = state.redis.get().await.map_err(internal_error)?;
-    let result: String = conn.get(&id).await.unwrap_or_else(|_| {
-        String::new()
-    });
-    if result.len() != 0 {
-        return Ok(ApiResponse::Redirect(result));
-    }
-
-    let conn = state.postgres.get().await.map_err(internal_error)?;
-    let row = conn
-        .query_one("SELECT url FROM uris WHERE uri = $1", &[&id])
-        .await
-        .map_err(internal_error)?;
-    let url: String = row.try_get(0).map_err(internal_error)?;
-
-    let mut conn_red = state.redis.get().await.unwrap();
-    conn_red.set_ex::<&str, &str, ()>(&id, &url, 3600).await.unwrap();
-
-    Ok(ApiResponse::Redirect(url))
+        Err(err) => {
+            println!("{}", err);
+            return Err(ApiError::InternalServerError);
+        }
+    };
 }
 
 pub async fn create_url(
     State(state): State<Arc<AppState>>,
     Json(data): Json<UserUrl>
 ) -> Result<ApiResponse, ApiError> {
-    println!("{:?}", state);
-    println!("{}", data.url);
 
     let url = Url::parse(&data.url).unwrap();
-
     let uri = random_uri(7);
 
-    let conn = state.postgres.get().await.map_err(internal_error)?;
-    let sql = "INSERT INTO uris (uri, url, created_at) VALUES ($1, $2, now())";
-    let stmt = conn.prepare(sql).await.map_err(internal_error)?;
-
-    conn.execute(&stmt, &[&uri, &url.to_string()]).await.map_err(internal_error)?;
-
-    let short_url = format!("http://{}:{}/{}", state.server.host, state.server.port, uri);
-    let msg = ShortenerMessage { original_url: url.to_string(), short_url: short_url };
-    Ok(ApiResponse::Created(msg))
+    match state.create_url_in_db(url.to_string(), uri).await {
+        Ok(result) => {
+            return Ok(ApiResponse::Created(result));
+        },
+        Err(err) => {
+            println!("{}", err);
+            return Err(ApiError::InternalServerError)
+        }
+    }
+    
 }
 
 fn random_uri(size: usize) -> String {

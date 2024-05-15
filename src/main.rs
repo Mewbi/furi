@@ -1,6 +1,10 @@
+mod config;
 mod handlers;
+mod repository;
 
+use config::{read_config_file, AppConfig};
 use handlers::{get_url, create_url, status};
+use repository::{connect_redis, connect_postgres};
 use axum::{
     routing::{get, post},
     Router
@@ -16,15 +20,9 @@ use tokio_postgres::NoTls;
 
 #[derive(Debug)]
 struct AppState {
-    server: Server,
+    config: AppConfig,
     redis: Pool<RedisConnectionManager>,
     postgres: Pool<PostgresConnectionManager<NoTls>>
-}
-
-#[derive(Debug)]
-struct Server {
-    port: u16,
-    host: String
 }
 
 
@@ -39,20 +37,27 @@ fn init_router(state: Arc<AppState>) -> Router {
 
 async fn init_state() -> Arc<AppState> {
 
-    let manager_redis = RedisConnectionManager::new("redis://localhost").unwrap();
-    let pool_redis = bb8::Pool::builder().build(manager_redis).await.unwrap();
+    let mut config = AppConfig::default();
+    match read_config_file("config.toml") {
+        Ok(c) => config = c,
+        Err(err) => panic!("Error loading config file: {}", err),
+    }
 
-    let manager_postgres = PostgresConnectionManager::new_from_stringlike("host=localhost port=5432 user=admin password=pass dbname=data", NoTls).unwrap();
-    let pool_postgres = Pool::builder().build(manager_postgres).await.unwrap();
-
-    Arc::new(AppState { 
-        redis: pool_redis,
-        postgres: pool_postgres,
-        server: Server{
-            port: 3000,
-            host: "127.0.0.1".to_string()
+    match connect_redis(&config.redis).await {
+        Ok(pool_redis) => {
+            match connect_postgres(&config.postgres).await {
+                Ok(pool_postgres) => {
+                    return Arc::new(AppState { 
+                        redis: pool_redis,
+                        postgres: pool_postgres,
+                        config: config,
+                    });
+                },
+                Err(err) => panic!("Error connecting to redis: {}", err),
+            }
         },
-    })
+        Err(err) => panic!("Error connecting to redis: {}", err),
+    }
 }
 
 
@@ -61,7 +66,7 @@ async fn main() {
     tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).init();
 
     let state = init_state().await;
-    let address: String = format!("0.0.0.0:{}", state.server.port);
+    let address: String = format!("0.0.0.0:{}", state.config.server.port);
     let app = init_router(state);
 
     println!("i'm initing poggers in {}", address );
