@@ -6,8 +6,8 @@ export type ShortenedUrl = {
   original_url: string;
 };
 
-export const useRetrospectiveStore = defineStore('urls', () => {
-  const shortenedUrls = ref<null | ShortenedUrl[]>(null);
+export const useUrlStore = defineStore('urls', () => {
+  const shortenedUrls = ref<ShortenedUrl[]>([]);
 
   const settedArray = (urls: ShortenedUrl[]): ShortenedUrl[] => {
     const uniqueIdsSet = new Set();
@@ -38,7 +38,7 @@ export const useRetrospectiveStore = defineStore('urls', () => {
     return shortenedUrls.value;
   };
 
-  const deleteFromKnowledge = (short_url: string) => {
+  const deleteUrl = (short_url: string) => {
     shortenedUrls.value = getKnownUrls();
 
     const hasIndex = shortenedUrls.value.findIndex((r) => r.short_url === short_url);
@@ -48,7 +48,7 @@ export const useRetrospectiveStore = defineStore('urls', () => {
     localStorage.setItem('known_urls', JSON.stringify(shortenedUrls.value));
   };
 
-  const setUrl = (url: ShortenedUrl) => {
+  const addUrl = (url: ShortenedUrl) => {
     shortenedUrls.value = getKnownUrls();
 
     shortenedUrls.value.unshift({ ...url });
@@ -59,8 +59,9 @@ export const useRetrospectiveStore = defineStore('urls', () => {
   };
 
   return {
-    setUrl,
+    shortenedUrls,
+    addUrl,
     getKnownUrls,
-    deleteFromKnowledge
+    deleteUrl
   };
 });

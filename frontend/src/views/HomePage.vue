@@ -25,9 +25,7 @@
 
       <div class="w-full max-w-lg flex flex-col items-center">
         <ShortInput />
-        <div class="w-full max-w-md mt-8 mb-2">
-          <ShortenedUrls />
-        </div>
+        <ShortenedUrls />
       </div>
     </div>
 
