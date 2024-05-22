@@ -11,6 +11,8 @@ use std::sync::Arc;
 use url::Url;
 use rand::{distributions::Alphanumeric, Rng};
 
+use tokio_postgres::error::SqlState;
+
 use crate::AppState;
 
 #[derive(Serialize)]
@@ -41,14 +43,19 @@ impl IntoResponse for ApiResponse {
 }
 
 pub enum ApiError {
-    BadRequest,
+    BadRequest(Option<Message>),
     InternalServerError
 }
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         match self {
-            Self::BadRequest => (StatusCode::BAD_REQUEST).into_response(),
+            Self::BadRequest(data) => {
+                match data {
+                    Some(d) => (StatusCode::BAD_REQUEST, Json(d)).into_response(),
+                    None => (StatusCode::BAD_REQUEST).into_response(),
+                }
+            },
             Self::InternalServerError => (StatusCode::INTERNAL_SERVER_ERROR).into_response()
         }
     }
@@ -69,7 +76,7 @@ pub async fn get_url(
 ) -> Result<ApiResponse, ApiError>  {
 
     if id.len() != 7 {
-        return Err(ApiError::BadRequest);
+        return Err(ApiError::BadRequest(None));
     }
 
     match state.get_url_from_db(&id).await {
@@ -89,19 +96,31 @@ pub async fn create_url(
     Json(data): Json<UserUrl>
 ) -> Result<ApiResponse, ApiError> {
 
-    let url = Url::parse(&data.url).unwrap();
-    let uri = random_uri(7);
+    let url = match Url::parse(&data.url) {
+        Ok(url) => url,
+        Err(_) => return Err(ApiError::BadRequest(None)),
+    };
 
-    match state.create_url_in_db(url.to_string(), uri).await {
-        Ok(result) => {
-            return Ok(ApiResponse::Created(result));
-        },
-        Err(err) => {
-            println!("{}", err);
-            return Err(ApiError::InternalServerError)
+    for _ in 0..5 {
+        let uri = random_uri(7);
+        match state.create_url_in_db(url.to_string(), uri.clone()).await {
+            Ok(result) => {
+                return Ok(ApiResponse::Created(result));
+            },
+            Err(err) => {
+                if let Some(db_err) = err.downcast_ref::<tokio_postgres::Error>() {
+                    if let Some(err_code) = db_err.code() {
+                        if err_code == &SqlState::UNIQUE_VIOLATION {
+                            println!("short URI colision: {}", uri);
+                            continue;
+                        }
+                    }
+                }
+                println!("error creating short URI: {}", err)
+            }
         }
     }
-    
+    return Err(ApiError::InternalServerError)
 }
 
 fn random_uri(size: usize) -> String {
@@ -113,10 +132,3 @@ fn random_uri(size: usize) -> String {
     uri
 }
 
-// TODO: Entender essa parada aq
-fn internal_error<E>(err: E) -> ApiError
-where
-    E: std::error::Error,
-{
-    ApiError::InternalServerError
-}

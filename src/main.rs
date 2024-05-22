@@ -45,27 +45,22 @@ fn init_router(state: Arc<AppState>) -> Router {
 
 async fn init_state() -> Arc<AppState> {
 
-    let mut config = AppConfig::default();
-    match read_config_file("config.toml") {
-        Ok(c) => config = c,
+    let conf = match read_config_file("config.toml") {
+        Ok(c) => c,
         Err(err) => panic!("Error loading config file: {}", err),
-    }
+    };
 
-    match connect_redis(&config.redis).await {
-        Ok(pool_redis) => {
-            match connect_postgres(&config.postgres).await {
-                Ok(pool_postgres) => {
-                    return Arc::new(AppState { 
-                        redis: pool_redis,
-                        postgres: pool_postgres,
-                        config: config,
-                    });
-                },
-                Err(err) => panic!("Error connecting to redis: {}", err),
-            }
-        },
-        Err(err) => panic!("Error connecting to redis: {}", err),
-    }
+    let conn_red = match connect_redis(&conf.redis).await {
+        Ok(r) => r,
+        Err(err) => panic!("Error connecting to redis: {}", err)
+    };
+
+    let conn_postgres = match connect_postgres(&conf.postgres).await {
+        Ok(p) => p,
+        Err(err) => panic!("Error connecting to postgres: {}", err),
+    };
+
+    Arc::new(AppState { config: conf, redis: conn_red, postgres: conn_postgres })
 }
 
 

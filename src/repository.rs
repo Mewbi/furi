@@ -5,7 +5,6 @@ use bb8_postgres::PostgresConnectionManager;
 use redis::AsyncCommands;
 use tokio_postgres::NoTls;
 
-// use crate::error::internal_error;
 use crate::handlers::ShortenerMessage;
 use crate::AppState;
 use crate::config::{RedisConfig, PostgresConfig};
@@ -20,8 +19,16 @@ pub async fn connect_postgres(config: &PostgresConfig) -> Result<Pool<PostgresCo
     let address: String = format!("host={} port={} user={} password={} dbname={}", config.host, config.port, config.user, config.password, config.db);
     let manager_postgres = PostgresConnectionManager::new_from_stringlike(address, NoTls)?;
     let pool_postgres = Pool::builder().build(manager_postgres).await?;
+    migrate_database(&pool_postgres).await?;
     Ok(pool_postgres)
 
+}
+
+pub async fn migrate_database(pool: &Pool<PostgresConnectionManager<NoTls>>) -> Result<(), Box<dyn std::error::Error>> {
+    let client = pool.get().await?;
+    let migration_query = include_str!("./migration/schema.sql");
+    client.batch_execute(migration_query).await?;
+    Ok(())
 }
 
 impl AppState {
