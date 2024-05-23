@@ -1,6 +1,6 @@
-## backend
-debug/
-target/
+## Backend
+furi/debug/
+furi/target/
 **/*.rs.bk
 *.pdb
 **/config.toml

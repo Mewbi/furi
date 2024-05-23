@@ -1,4 +1,5 @@
 name = "furi"
+uri_size = 7
 
 [server]
   port = 3000

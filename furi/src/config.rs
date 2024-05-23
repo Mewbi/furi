@@ -4,6 +4,7 @@ use std::fs;
 #[derive(Debug, Deserialize, Default)]
 pub struct AppConfig {
     pub name: String,
+    pub uri_size: usize,
     pub server: ServerConfig,
     pub redis: RedisConfig,
     pub postgres: PostgresConfig,
