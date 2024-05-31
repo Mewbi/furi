@@ -8,6 +8,7 @@ pub struct AppConfig {
     pub server: ServerConfig,
     pub redis: RedisConfig,
     pub postgres: PostgresConfig,
+    pub geoip: GeoipConfig,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -28,6 +29,12 @@ pub struct PostgresConfig {
     pub user: String,
     pub password: String,
     pub db: String,
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub struct GeoipConfig {
+    pub country_file: String,
+    pub city_file: String,
 }
 
 pub fn read_config_file(path: &str) -> Result<AppConfig, Box<dyn std::error::Error>> {

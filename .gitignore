@@ -5,6 +5,7 @@ furi/target/
 *.pdb
 **/config.toml
 **/.env
+furi/geoip/*.mmdb
 
 ## Frontend
 # Logs

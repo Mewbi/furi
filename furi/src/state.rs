@@ -1,16 +1,21 @@
+use tokio::sync::mpsc::Sender;
 use std::sync::Arc;
 
 use crate::config::{read_config_file, AppConfig};
-use crate::infrastructure::repository::{connect_redis, connect_postgres, Repository, Databases};
+use crate::infrastructure::{
+    repository::{connect_redis, connect_postgres, read_geoip, Repository, Databases},
+    redpanda::UserData
+};
 
 #[derive(Debug)]
 pub struct AppState<T:Repository> {
     pub config: AppConfig,
-    pub repository: T
+    pub repository: T,
+    pub analytics: Sender<UserData>
 }
 
 
-pub async fn init_state() -> Arc<AppState<Databases>> {
+pub async fn init_state(tx: Sender<UserData>) -> Arc<AppState<Databases>> {
 
     let conf = match read_config_file("config.toml") {
         Ok(c) => c,
@@ -26,6 +31,20 @@ pub async fn init_state() -> Arc<AppState<Databases>> {
         Ok(p) => p,
         Err(err) => panic!("Error connecting to postgres: {}", err),
     };
+    
+    let geoip_db = match read_geoip(&conf.geoip).await {
+        Ok(p) => p,
+        Err(err) => panic!("Error connecting to postgres: {}", err),
+    };
 
-    Arc::new(AppState { config: conf, repository: Databases { redis: conn_red, postgres: conn_postgres } })
+    Arc::new(AppState { 
+        config: conf, 
+        repository: Databases { 
+            redis: conn_red, 
+            postgres: 
+            conn_postgres, 
+            geoip: geoip_db 
+        },
+        analytics: tx
+    })
 }

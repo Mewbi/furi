@@ -17,19 +17,41 @@ services:
     ports:
       - "5432:5432"
 
-  # clickhouse:
-  #   image: yandex/clickhouse-server:latest
-  #   container_name: clickhouse
-  #   ports:
-  #     - "8123:8123"
-  #     - "9000:9000"
-  #     - "9009:9009"
-  #   environment:
-  #     - CLICKHOUSE_CONFIG_DIR=/etc/clickhouse-server/config.d
-  #     - CLICKHOUSE_PATH=/var/lib/clickhouse
-  #   volumes:
-  #     - clickhouse_data:/var/lib/clickhouse
-  #     - ./clickhouse/config:/etc/clickhouse-server/config.d
+  redpanda:
+    image: redpandadata/redpanda:latest
+    container_name: redpanda
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --node-id 0
+      - --check=false
+      - --advertise-kafka-addr redpanda
+    ports:
+      - "9092:9092"
+      - "9644:9644"
+    networks:
+        - redpanda_clickhouse
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 1
 
-# volumes:
-#   clickhouse_data:
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    networks:
+        - redpanda_clickhouse
+    volumes:
+      - ./clickhouse-config.xml:/etc/clickhouse-server/config.d/custom.xml
+    depends_on:
+      - redpanda
+
+networks:
+  redpanda_clickhouse:
+    driver: bridge

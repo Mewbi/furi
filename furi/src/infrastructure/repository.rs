@@ -1,21 +1,31 @@
+use std::net::IpAddr;
+use std::future::Future;
 use bb8::Pool;
 use bb8_redis::RedisConnectionManager;
 use bb8_redis::redis::AsyncCommands;
 use bb8_redis::bb8;
 use bb8_postgres::PostgresConnectionManager;
 use tokio_postgres::NoTls;
+use maxminddb::{Reader, geoip2};
 
-use crate::config::{RedisConfig, PostgresConfig};
+use crate::config::{RedisConfig, PostgresConfig, GeoipConfig};
 
 pub trait Repository {
-    fn get_url(&self, id: String) -> impl std::future::Future<Output = Result<String, Box<dyn std::error::Error>>> + Send;
-    fn create_url(&self, url: String, uri: String) -> impl std::future::Future<Output = Result<(), Box<dyn std::error::Error>>> + Send;
+    fn get_url(&self, id: String) -> impl Future<Output = Result<String, Box<dyn std::error::Error>>> + Send;
+    fn create_url(&self, url: String, uri: String) -> impl Future<Output = Result<(), Box<dyn std::error::Error>>> + Send;
+    fn get_geoip(&self, ip: &str) -> impl Future<Output = Result<geoip2::Country, Box<dyn std::error::Error>>> + Send;
 }
 
 #[derive(Debug)]
 pub struct Databases {
     pub redis: Pool<RedisConnectionManager>,
-    pub postgres: Pool<PostgresConnectionManager<NoTls>>
+    pub postgres: Pool<PostgresConnectionManager<NoTls>>,
+    pub geoip: GeoipDb
+}
+
+#[derive(Debug)]
+pub struct GeoipDb {
+    country: Reader<Vec<u8>>,
 }
 
 impl Repository for Databases {
@@ -47,6 +57,12 @@ impl Repository for Databases {
         pg_conn.execute(&stmt, &[&uri, &url.to_string()]).await?;
         Ok(())
     }
+
+    async fn get_geoip(&self, ip: &str) -> Result<geoip2::Country, Box<dyn std::error::Error>> {
+        let ip: IpAddr = ip.parse()?;
+        let country: geoip2::Country = self.geoip.country.lookup(ip)?;
+        Ok(country)
+    }
 }
 
 pub async fn connect_redis(config: &RedisConfig) -> Result<Pool<RedisConnectionManager>,Box<dyn std::error::Error>> {
@@ -68,4 +84,9 @@ pub async fn migrate_database(pool: &Pool<PostgresConnectionManager<NoTls>>) -> 
     let migration_query = include_str!("./migrations/schema.sql");
     client.batch_execute(migration_query).await?;
     Ok(())
+}
+
+pub async fn read_geoip(config: &GeoipConfig) -> Result<GeoipDb, Box<dyn std::error::Error>> {
+    let reader_country = Reader::open_readfile(&config.country_file)?;
+    Ok(GeoipDb { country: reader_country })
 }

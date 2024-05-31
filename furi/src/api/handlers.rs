@@ -1,16 +1,17 @@
 use axum::{
     Json,
-    extract::{State, Path}
+    extract::{State, Path, ConnectInfo}
 };
-
+use std::net::SocketAddr;
 use serde::Deserialize;
 use std::sync::Arc;
 use url::Url;
 use rand::{distributions::Alphanumeric, Rng};
 use tokio_postgres::error::SqlState;
+use chrono::prelude::*;
 use super::response::{ApiResponse, ApiError, ShortenerMessage};
 
-use crate::state::AppState;
+use crate::{infrastructure::redpanda::UserData, state::AppState};
 use crate::infrastructure::repository::Repository;
 
 #[derive(Deserialize)]
@@ -24,25 +25,63 @@ pub async fn status() -> Result<ApiResponse, ApiError>  {
 
 pub async fn get_url<T:Repository + Send + Sync>(
     Path(id): Path<String>,
-    State(state): State<Arc<AppState<T>>>
+    State(state): State<Arc<AppState<T>>>,
+    headers: axum::http::HeaderMap,
+    ConnectInfo(remote_addr): ConnectInfo<SocketAddr>
 ) -> Result<ApiResponse, ApiError> {
 
     if id.len() != state.config.uri_size {
         let not_found = format!("http://{}:5173/not-found", state.config.server.host);
         return Err(ApiError::Redirect(not_found));
     }
+   
+    let tmp = remote_addr.ip().to_string();
+    let ip = headers.get("x-forwarded-for")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or(&tmp);
 
-    match state.repository.get_url(id).await {
-        Ok(url) => {
-            return Ok(ApiResponse::Redirect(url));
-        },
+    let user_agent = headers.get("user-agent")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("-");
 
+    let now: DateTime<Utc> = Utc::now();
+
+    let url = match state.repository.get_url(id.clone()).await {
+        Ok(url) => url,
         Err(err) => {
             println!("error getting url: {}", err);
             let not_found = format!("http://{}:5173/not-found", state.config.server.host);
             return Err(ApiError::Redirect(not_found));
         }
     };
+
+    let mut user_data = UserData {
+        date: now,
+        ip: ip.to_string(),
+        uri: id,
+        country: "".to_string(),
+        user_agent: user_agent.to_string()
+    };
+
+    match state.repository.get_geoip(&ip).await {
+        Ok(geoip) => {
+            match geoip.country.and_then(|c| c.iso_code) {
+                Some(country) => {
+                    user_data.country = country.to_string();
+                },
+                None => println!("country of ip {} not found", ip),
+            }
+        },
+        Err(err) => {
+            println!("error getting geoip: {}", err);
+        }
+    }
+
+    if let Err(err) = state.analytics.send(user_data).await {
+        println!("error sending user analytics througth channel: {}", err);
+    }
+
+    return Ok(ApiResponse::Redirect(url));
 }
 
 pub async fn create_url<T:Repository + Send + Sync>(
