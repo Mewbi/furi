@@ -66,53 +66,53 @@ services:
 
     command: "rsync -a --del /app/ /static/"
 
-  # furi-1:
-  #   build:
-  #     ./furi/
-  #   container_name: furi_1
-  #   restart: always
-  #   networks:
-  #     - api
-  #   ports:
-  #     - "127.0.0.1:3001:3000"
-  #   depends_on:
-  #     - redis
-  #     - postgres
-  #     - redpanda
+  furi-1:
+    build:
+      ./furi/
+    container_name: furi_1
+    restart: always
+    networks:
+      - api
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      - redis
+      - postgres
+      - redpanda
 
-  # furi-2:
-  #   build:
-  #     ./furi/
-  #   container_name: furi_2
-  #   restart: always
-  #   networks:
-  #     - api
-  #   ports:
-  #     - "127.0.0.1:3002:3000"
-  #   depends_on:
-  #     - redis
-  #     - postgres
-  #     - redpanda
+  furi-2:
+    build:
+      ./furi/
+    container_name: furi_2
+    restart: always
+    networks:
+      - api
+    ports:
+      - "127.0.0.1:3002:3000"
+    depends_on:
+      - redis
+      - postgres
+      - redpanda
 
-  # nginx:
-  #   image: nginx:1.25.4
-  #   container_name: furi_nginx
-  #   hostname: nginx
-  #   restart: always
-  #   networks:
-  #     - api
-  #   ports:
-  #     - "8443:443"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ./certs/furi-cert.pem:/etc/ssl/furi-cert.pem:ro
-  #     - ./certs/furi-key.key:/etc/ssl/furi-key.key:ro
-  #     - static:/etc/nginx/html/:ro
+  nginx:
+    image: nginx:1.25.4
+    container_name: furi_nginx
+    hostname: nginx
+    restart: always
+    networks:
+      - api
+    ports:
+      - "8443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs/furi-cert.pem:/etc/ssl/furi-cert.pem:ro
+      - ./certs/furi-key.key:/etc/ssl/furi-key.key:ro
+      - static:/etc/nginx/html/:ro
 
-  #   depends_on:
-  #     - furi-1
-  #     - furi-2
-  #     - frontend
+    depends_on:
+      - furi-1
+      - furi-2
+      - frontend
 
 networks:
   redpanda_clickhouse:
