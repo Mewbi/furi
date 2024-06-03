@@ -1,7 +1,0 @@
-<clickhouse>
-  <kafka>
-    <debug>all</debug>
-    <metadata_broker_list>redpanda:9092</metadata_broker_list>
-    <group_id>clickhouse</group_id>
-  </kafka>
-</clickhouse>

@@ -31,7 +31,7 @@ pub async fn get_url<T:Repository + Send + Sync>(
 ) -> Result<ApiResponse, ApiError> {
 
     if id.len() != state.config.uri_size {
-        let not_found = format!("http://{}:5173/not-found", state.config.server.host);
+        let not_found = format!("{}/not-found", state.config.server.cors_addr);
         return Err(ApiError::Redirect(not_found));
     }
    
@@ -50,7 +50,7 @@ pub async fn get_url<T:Repository + Send + Sync>(
         Ok(url) => url,
         Err(err) => {
             println!("error getting url: {}", err);
-            let not_found = format!("http://{}:5173/not-found", state.config.server.host);
+            let not_found = format!("{}/not-found", state.config.server.cors_addr);
             return Err(ApiError::Redirect(not_found));
         }
     };
@@ -73,7 +73,7 @@ pub async fn get_url<T:Repository + Send + Sync>(
             }
         },
         Err(err) => {
-            println!("error getting geoip: {}", err);
+            println!("error getting geoip to ip {}: {}", ip, err);
         }
     }
 
@@ -98,7 +98,7 @@ pub async fn create_url<T:Repository + Send + Sync>(
         let uri = random_uri(state.config.uri_size);
         match state.repository.create_url(url.to_string(), uri.clone()).await {
             Ok(_) => {
-                let short_url = format!("http://{}:{}/{}", state.config.server.host, state.config.server.port, uri);
+                let short_url = format!("{}/{}", state.config.domain, uri);
                 let res = ShortenerMessage { original_url: url.to_string(), short_url };
                 return Ok(ApiResponse::Created(res));
             },

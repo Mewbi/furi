@@ -34,15 +34,14 @@ pub async fn init_state(tx: Sender<UserData>) -> Arc<AppState<Databases>> {
     
     let geoip_db = match read_geoip(&conf.geoip).await {
         Ok(p) => p,
-        Err(err) => panic!("Error connecting to postgres: {}", err),
+        Err(err) => panic!("Error reading geoip db: {}", err),
     };
 
     Arc::new(AppState { 
         config: conf, 
         repository: Databases { 
             redis: conn_red, 
-            postgres: 
-            conn_postgres, 
+            postgres: conn_postgres, 
             geoip: geoip_db 
         },
         analytics: tx

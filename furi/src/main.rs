@@ -18,13 +18,12 @@ async fn main() {
     let (tx, rx): (Sender<UserData>, Receiver<UserData>) = mpsc::channel(1000);
 
     let state = init_state(tx).await;
-    let address: String = format!("0.0.0.0:{}", state.config.server.port);
+    task::spawn(handle_user_data(rx, state.config.clone()));
+
+    let address: String = format!("{}:{}", state.config.server.host, state.config.server.port);
     let app = create_router(state);
 
-
-    task::spawn(handle_user_data(rx));
-
-    println!("i'm initing poggers in {}", address );
+    println!("Starting Furi API: {}", address );
     let listener = tokio::net::TcpListener::bind(address).await.unwrap();
     axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await.unwrap();
 }

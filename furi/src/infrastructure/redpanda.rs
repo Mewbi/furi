@@ -9,6 +9,8 @@ use serde_json;
 use chrono::prelude::*;
 use chrono::serde::ts_seconds;
 
+use crate::config::AppConfig;
+
 #[derive(Debug, Serialize)]
 pub struct UserData {
     #[serde(with = "ts_seconds")]
@@ -19,9 +21,10 @@ pub struct UserData {
     pub country: String,
 }
 
-pub async fn handle_user_data(mut rx: Receiver<UserData>) {
+pub async fn handle_user_data(mut rx: Receiver<UserData>, config: AppConfig) {
     let mut buffer = VecDeque::new();
-    let mut interval = time::interval(Duration::from_secs(10));
+    let address = format!("{}:{}", config.redpanda.host, config.redpanda.port);
+    let mut interval = time::interval(Duration::from_secs(config.redpanda.send_interval));
 
     loop {
         tokio::select! {
@@ -29,21 +32,21 @@ pub async fn handle_user_data(mut rx: Receiver<UserData>) {
                 buffer.push_back(data);
 
                 if buffer.len() >= 1000 {
-                    send_data(buffer.drain(..).collect()).await;
+                    send_data(address.clone(), buffer.drain(..).collect()).await;
                 }
             }
             _ = interval.tick() => {
                 if !buffer.is_empty() {
-                    send_data(buffer.drain(..).collect()).await;
+                    send_data(address.clone(), buffer.drain(..).collect()).await;
                 }
             }
         }
     }
 }
 
-async fn send_data(data: Vec<UserData>) {
+async fn send_data(address: String, data: Vec<UserData>) {
     let producer: FutureProducer = match ClientConfig::new()
-        .set("bootstrap.servers", "localhost:9092")
+        .set("bootstrap.servers", address)
         .create() {
             Ok(p) => p,
             Err(err) => {
@@ -67,7 +70,7 @@ async fn send_data(data: Vec<UserData>) {
 
         match timeout(Duration::from_secs(5), producer.send(record, Duration::from_secs(0))).await {
             Ok(Ok(delivery)) => {
-                println!("sended: {:?}", delivery);
+                println!("sended to clickhouse: {:?}", delivery);
             }
             Ok(Err((e, _))) => {
                 eprintln!("error delivering message: {:?}", e);

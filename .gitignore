@@ -1,9 +1,12 @@
+certs/*
+
 ## Backend
 furi/debug/
 furi/target/
 **/*.rs.bk
 *.pdb
 **/config.toml
+**/config.prod.toml
 **/.env
 furi/geoip/*.mmdb
 
