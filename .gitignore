@@ -10,6 +10,9 @@ furi/target/
 **/.env
 furi/geoip/*.mmdb
 
+analytics/debug/
+analytics/target/
+
 ## Frontend
 # Logs
 frontend/logs

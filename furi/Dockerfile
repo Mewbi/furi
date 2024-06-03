@@ -8,7 +8,7 @@ RUN USER=root cargo new --bin furi
 
 WORKDIR /app
 
-COPY Cargo.toml Cargo.lock config.toml ./
+COPY Cargo.toml Cargo.lock ./
 COPY config.prod.toml ./config.toml
 
 COPY src ./src

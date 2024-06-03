@@ -1,16 +1,27 @@
 name = "furi"
 uri_size = 7
+domain = "https://furi.live"
 
 [server]
   port = 3000
-  host = "127.0.0.1"
+  host = "0.0.0.0"
+  cors_addr = "https://www.furi.live:8443"
 
 [redis]
-  host = "localhost"
+  host = "redis"
 
 [postgres]
-  host = "localhost"
+  host = "postgres"
   port = 5432
   user = "user"
   password = "password"
   db = "db"
+
+[redpanda]
+  host = "redpanda"
+  port = 9092
+  send_interval = 10
+
+[geoip]
+  country_file = "geoip/GeoLite2-Country.mmdb"
+  city_file = "geoip/GeoLite2-City.mmdb"
