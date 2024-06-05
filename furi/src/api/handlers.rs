@@ -2,6 +2,7 @@ use axum::{
     Json,
     extract::{State, Path, ConnectInfo}
 };
+use std::{net::IpAddr, str::FromStr};
 use std::net::SocketAddr;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -19,8 +20,11 @@ pub struct UserUrl {
     url: String
 }
 
-pub async fn status() -> Result<ApiResponse, ApiError>  {
-    Ok(ApiResponse::OK(Some("Ok".to_string())))
+pub async fn status<T:Repository + Send + Sync>(
+    State(state): State<Arc<AppState<T>>>
+) -> Result<ApiResponse, ApiError>  {
+    let address = format!("{}", state.config.server.cors_addr);
+    Ok(ApiResponse::Redirect(address))
 }
 
 pub async fn get_url<T:Repository + Send + Sync>(
@@ -35,10 +39,14 @@ pub async fn get_url<T:Repository + Send + Sync>(
         return Err(ApiError::Redirect(not_found));
     }
    
-    let tmp = remote_addr.ip().to_string();
-    let ip = headers.get("x-forwarded-for")
+    let remote_addr = remote_addr.ip().to_string();
+    let xff = headers.get("x-forwarded-for")
             .and_then(|v| v.to_str().ok())
-            .unwrap_or(&tmp);
+            .unwrap_or("-");
+    let ip = match parse_xff(xff) {
+        Some(res) => res,
+        None => remote_addr,
+    };
 
     let user_agent = headers.get("user-agent")
             .and_then(|v| v.to_str().ok())
@@ -94,6 +102,11 @@ pub async fn create_url<T:Repository + Send + Sync>(
         Err(_) => return Err(ApiError::BadRequest(Some("Invalid URL informed".to_string()))),
     };
 
+    match validate_url(url.clone()) {
+        Ok(_) => (),
+        Err(msg) => return Err(ApiError::BadRequest(Some(msg))),
+    }
+
     for _ in 0..5 {
         let uri = random_uri(state.config.uri_size);
         match state.repository.create_url(url.to_string(), uri.clone()).await {
@@ -127,3 +140,39 @@ fn random_uri(size: usize) -> String {
     uri
 }
 
+fn parse_xff(xff: &str) -> Option<String> {
+    for val in xff.split(',') {
+        match IpAddr::from_str(val.trim()) {
+            Ok(ip) => return Some(ip.to_string()),
+            Err(_) => continue,
+        }
+    }
+    None
+}
+
+fn validate_url(url: Url) -> Result<(), String> {
+    let host_str = url.host_str().ok_or("URL has no host")?;
+    
+    if host_str == "localhost" {
+        return Err("URL points to an internal IP address".to_string());
+    }
+    
+    if let Ok(ip) = host_str.parse::<IpAddr>() {
+        if is_internal_ip(&ip) {
+            return Err("URL points to an internal IP address".to_string());
+        }
+    } 
+    
+    Ok(())
+}
+
+fn is_internal_ip(ip: &IpAddr) -> bool {
+    match ip {
+        IpAddr::V4(ipv4) => {
+            ipv4.is_loopback() || ipv4.is_private() || ipv4.is_link_local() || ipv4.is_broadcast() || ipv4.is_documentation()
+        }
+        IpAddr::V6(ipv6) => {
+            ipv6.is_loopback() || ipv6.is_unspecified()
+        }
+    }
+}

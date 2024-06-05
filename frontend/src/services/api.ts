@@ -5,6 +5,13 @@ type ShortUrlResponse = {
   short_url: string;
 };
 
+type ErrorResponse = {
+  error: true;
+  message?: string;
+};
+
+type MayBeError<T> = T | ErrorResponse;
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 const apiRequest = axios.create({
@@ -12,13 +19,20 @@ const apiRequest = axios.create({
   withCredentials: true,
 });
 
-type MayBeError<T> = (T & { error?: true }) | { error: true };
 
 const shortUrl = async (url: string): Promise<MayBeError<ShortUrlResponse>> => { 
-  const res = await apiRequest.post(`/url`, {url}).catch(() => null);
-  if (!res) return { error: true };
+  const res = await apiRequest.post(`/url`, {url})
+    .then((response) => response.data as ShortUrlResponse)
+    .catch((err) => {
+      const data :ErrorResponse = {
+        error: true
+      };
+      if (err.response && err.response.data.message)
+        data.message = err.response.data.message;
+      return data
+  });
 
-  return res.data;
+  return res;
 };
 
 export default { shortUrl };

@@ -11,8 +11,11 @@
   const url = ref('');
   const shortUrl = async () => {
     const res = await api.shortUrl(url.value);
-    if (res.error)
+    if (res.error) {
+      if ('message' in res && res.message)
+        return notifyStore.notify(`${res.message}`, NotificationType.Error);
       return notifyStore.notify('An error occured to create short url', NotificationType.Error);
+    }
 
     urlStore.addUrl(res);
     notifyStore.notify('Success creating short url', NotificationType.Success);

@@ -18,7 +18,6 @@ pub struct ShortenerMessage {
 }
 
 pub enum ApiResponse {
-    OK(Option<String>),
     Created(ShortenerMessage),
     Redirect(String)
 }
@@ -26,12 +25,6 @@ pub enum ApiResponse {
 impl IntoResponse for ApiResponse {
     fn into_response(self) -> Response {
         match self {
-            Self::OK(data) => {
-                match data {
-                    Some(m) => (StatusCode::OK, Json(Message{ message: m})).into_response(),
-                    None => (StatusCode::OK).into_response()
-                }
-            },
             Self::Created(data) => (StatusCode::CREATED, Json(data)).into_response(),
             Self::Redirect(url) => (Redirect::permanent(&url)).into_response()
         }
