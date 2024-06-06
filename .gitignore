@@ -1,4 +1,8 @@
-certs/*
+certs/*.pem
+certs/*.crt
+certs/*.key
+certs/*.csr
+certs/*.cnf
 
 ## Backend
 furi/debug/

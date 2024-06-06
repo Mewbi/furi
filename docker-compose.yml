@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3'
 
 services:
   redis:
@@ -94,20 +94,40 @@ services:
       - postgres
       - redpanda
 
-  nginx:
-    image: nginx:1.25.4
-    container_name: furi_nginx
-    hostname: nginx
+  # nginx:
+  #   image: nginx:1.25.4
+  #   container_name: furi_nginx
+  #   hostname: nginx
+  #   restart: always
+  #   networks:
+  #     - api
+  #   ports:
+  #     - "8443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./certs/furi-cert.pem:/etc/ssl/furi-cert.pem:ro
+  #     - ./certs/furi-key.key:/etc/ssl/furi-key.key:ro
+  #     - static:/etc/nginx/html/:ro
+
+  #   depends_on:
+  #     - furi-1
+  #     - furi-2
+  #     - frontend
+
+  jequi:
+    image: ghcr.io/termack/jequi-go
+    container_name: furi_jequi
+    hostname: jequi
     restart: always
-    networks:
-      - api
     ports:
-      - "8443:443"
+      - "8443:7878"
+
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./web-server/config.yaml:/etc/jequi/conf.yaml:ro
+      - ./web-server/loadbalancer:/etc/jequi/plugins/jequi_go/go/handle
       - ./certs/furi-cert.pem:/etc/ssl/furi-cert.pem:ro
       - ./certs/furi-key.key:/etc/ssl/furi-key.key:ro
-      - static:/etc/nginx/html/:ro
+      - static:/etc/jequi/html/:ro
 
     depends_on:
       - furi-1
