@@ -1,7 +1,7 @@
 # 🦀 Furi 🦀
 
 <p align="center">
-    <img src="./assets/logo-wide.png" height="300">
+    <img src="./assets/logo_wide.png" height="300">
 </p>
 
 A **F**ast way to generate a short **URI**, in others words, it's an URL shortener.
