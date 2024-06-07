@@ -30,7 +30,7 @@ More details about each layer of the project can be found in the respective dire
 
 ## 🔬 Tecnologies
 
-The tecnologies that projects uses or has been writen are:
+The technologies that this project uses or has been written in are:
 
 - [Shortener API](./furi/): [Rust](https://www.rust-lang.org/)
 - [Analytics API](./analytics/): [Rust](https://www.rust-lang.org/)
@@ -39,6 +39,7 @@ The tecnologies that projects uses or has been writen are:
 - Cache Database: [Redis](https://redis.io/)
 - URLs Database: [Postgres](https://www.postgresql.org/)
 - Analytics Database: [Clickhouse](https://clickhouse.com/)
+- Message Broker: [Redpanda](https://redpanda.com/)
 - CDN: [Cloudflare](https://www.cloudflare.com)
 
 ## 🏃‍♂️ Running Local
@@ -88,12 +89,12 @@ docker exec -it postgres psql -U <user> -d <database>
 
 It is possible to manually send data to a `redpanda` topic using `kafkacat`:
 
-```
+```sh
 echo '{"key":"key1", "value":"value1"}' | kafkacat -b redpanda:9092 -t my-topic -P
 ``` 
 
 To consume a `redpanda` topic from beginning
-```
+```sh
 kafkacat -b redpanda:9092 -t my-topic -C -o beginning
 ```
 
