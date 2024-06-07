@@ -8,9 +8,38 @@ A **F**ast way to generate a short **URI**, in others words, it's an URL shorten
 
 Designed with a high scalability and performance architecture, Furi is a straightforward URL shortener with integrated analytics.
 
-## Architecture
+## 🏗️ Architecture
 
-## Tecnologies
+<p align="center">
+    <img src="./assets/diagram.png">
+</p>
+
+The first layer of access is a CDN platform, in this case, [Cloudflare](https://www.cloudflare.com/). The major reason for using a CDN is security (e.g., WAF), but the frontend static content can also be cached, improving the performance of the website.
+
+After that, the access is sent to a [Web Server](./web-server/). Its responsibilities include serving the frontend static files, acting as a load balancer for the N instances of the Shortener API (in this case, 2 instances), and proxying access to the Analytics API.
+
+The [Shortener API](./furi/) creates and stores the short and original URLs into database (a SQL-like database) and uses a cache layer (key-value database) to improve response performance.
+
+When a user accesses a short URL, metrics are collected from the user and sent to a message broker to be stored in the analytics database.
+
+The [Analytics API](./analytics/) provides the frontend with the user metrics collected when a short URL is accessed. Basically, each short URL has its own user metrics.
+
+The project uses a simple architecture that can be scaled horizontally easily. To scale the process of accessing and shortening URLs, just instantiate more instances of the Shortener API and add them to the load balancer.
+
+More details about each layer of the project can be found in the respective directory.
+
+## 🔬 Tecnologies
+
+The tecnologies that projects uses or has been writen are:
+
+- [Shortener API](./furi/): [Rust](https://www.rust-lang.org/)
+- [Analytics API](./analytics/): [Rust](https://www.rust-lang.org/)
+- [FrontEnd](./frontend/): [Vue.js](https://vuejs.org/)
+- [Web Server](./web-server/): [Jequi](https://github.com/Termack/jequi)
+- Cache Database: [Redis](https://redis.io/)
+- URLs Database: [Postgres](https://www.postgresql.org/)
+- Analytics Database: [Clickhouse](https://clickhouse.com/)
+- CDN: [Cloudflare](https://www.cloudflare.com)
 
 ## 🏃‍♂️ Running Local
 
@@ -43,12 +72,18 @@ A tip is edit your `/etc/hosts` to point every service hostname to your localhos
 127.0.0.1 redpanda redis postgres clickhouse furi.live www.furi.live
 ```
 
-### Useful Tools
+### 🛠️ Useful Tools
 
 To access the `clickhouse`, execute
 
 ```sh
 docker exec -it clickhouse clickhouse-client
+```
+
+To access the `postgres`, execute
+
+```sh
+docker exec -it postgres psql -U <user> -d <database>
 ```
 
 It is possible to manually send data to a `redpanda` topic using `kafkacat`:
