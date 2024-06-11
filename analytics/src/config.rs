@@ -12,6 +12,7 @@ pub struct AppConfig {
 pub struct ServerConfig {
     pub host: String,
     pub port: u16,
+    pub cors_addr: String
 }
 
 #[derive(Debug, Deserialize, Default)]

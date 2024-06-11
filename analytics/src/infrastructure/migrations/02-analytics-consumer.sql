@@ -11,5 +11,6 @@ SETTINGS
   kafka_group_name = 'clickhouse',
   kafka_format = 'JSONEachRow',
   kafka_thread_per_consumer = 0, 
-  kafka_num_consumers = 1, 
+  kafka_num_consumers = 1,
+  kafka_skip_broken_messages = 1,
   kafka_flush_interval_ms = 5000;

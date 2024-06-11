@@ -3,7 +3,7 @@ version: '3'
 services:
   redis:
     image: redis:latest
-    container_name: redis
+    container_name: furi_redis
     ports:
       - "127.0.0.1:6379:6379"
     networks:
@@ -11,7 +11,7 @@ services:
 
   postgres:
     image: postgres
-    container_name: postgres
+    container_name: furi_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -23,7 +23,7 @@ services:
 
   redpanda:
     image: redpandadata/redpanda:latest
-    container_name: redpanda
+    container_name: furi_redpanda
     command:
       - redpanda
       - start
@@ -46,7 +46,7 @@ services:
 
   clickhouse:
     image: clickhouse/clickhouse-server:latest
-    container_name: clickhouse
+    container_name: furi_clickhouse
     ports:
       - "127.0.0.1:8123:8123"
       - "127.0.0.1:9000:9000"
@@ -60,7 +60,7 @@ services:
   frontend:
     build:
       ./frontend/
-    container_name: frontend
+    container_name: furi_frontend
     volumes:
       - static:/static/
 
@@ -69,7 +69,7 @@ services:
   furi-1:
     build:
       ./furi/
-    container_name: furi_1
+    container_name: furi_api_1
     restart: always
     networks:
       - api
@@ -83,7 +83,7 @@ services:
   furi-2:
     build:
       ./furi/
-    container_name: furi_2
+    container_name: furi_api_2
     restart: always
     networks:
       - api
@@ -103,6 +103,7 @@ services:
   #     - api
   #   ports:
   #     - "8443:443"
+  #     - "443:443"
   #   volumes:
   #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
   #     - ./certs/furi-cert.pem:/etc/ssl/furi-cert.pem:ro
@@ -115,12 +116,15 @@ services:
   #     - frontend
 
   jequi:
-    image: ghcr.io/termack/jequi-go
+    image: ghcr.io/termack/jequi:v0.0.3-2
     container_name: furi_jequi
     hostname: jequi
     restart: always
     ports:
       - "8443:7878"
+      - "443:7878"
+    networks:
+      - api
 
     volumes:
       - ./web-server/config.yaml:/etc/jequi/conf.yaml:ro

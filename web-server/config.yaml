@@ -2,17 +2,17 @@ tls_active: true
 ip: 0.0.0.0
 host:
   www.furi.live:
-    chunk_size: 1000000
     ssl_certificate: /etc/ssl/furi-cert.pem
     ssl_key: /etc/ssl/furi-key.key
-    uri:
-      /:
-        static_files_path: /etc/jequi/html/index.html
+    not_found_file_path: /etc/jequi/html/index.html
+    path:
       /assets/:
         static_files_path: /etc/jequi/html/assets/
+      /:
+
+        static_files_path: /etc/jequi/html/
 
   furi.live:
     ssl_certificate: /etc/ssl/furi-cert.pem
     ssl_key: /etc/ssl/furi-key.key
-    go_library_path: /etc/jequi/libjequi.so
-    proxy_address: furi-loadbalancer
+    proxy_address: ["http://furi-1:3000", "http://furi-2:3000"]

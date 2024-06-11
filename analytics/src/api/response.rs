@@ -2,14 +2,11 @@ use serde::Serialize;
 
 use axum::{
     Json,
-    response::{Response, IntoResponse, Redirect},
+    response::{Response, IntoResponse},
     http::StatusCode
 };
 
-#[derive(Serialize)]
-pub struct Message {
-    pub message: String
-}
+use crate::infrastructure::repository::UriMetrics;
 
 #[derive(Serialize)]
 pub struct ShortenerMessage {
@@ -18,22 +15,28 @@ pub struct ShortenerMessage {
 }
 
 pub enum ApiResponse {
-    OK(Option<String>),
-    Created(ShortenerMessage),
-    Redirect(String)
+    OK(OkTypes),
+}
+
+pub enum OkTypes {
+    Empty,
+    Metrics(UriMetrics)
+}
+
+#[derive(Serialize)]
+pub struct Message {
+    pub message: String
 }
 
 impl IntoResponse for ApiResponse {
     fn into_response(self) -> Response {
         match self {
-            Self::OK(data) => {
-                match data {
-                    Some(m) => (StatusCode::OK, Json(Message{ message: m})).into_response(),
-                    None => (StatusCode::OK).into_response()
+            ApiResponse::OK(msg) => {
+                match msg {
+                    OkTypes::Empty => (StatusCode::OK).into_response(),
+                    OkTypes::Metrics(metrics) => (StatusCode::OK, Json(metrics)).into_response()
                 }
-            },
-            Self::Created(data) => (StatusCode::CREATED, Json(data)).into_response(),
-            Self::Redirect(url) => (Redirect::permanent(&url)).into_response()
+            }
         }
     }
 }
@@ -41,7 +44,6 @@ impl IntoResponse for ApiResponse {
 pub enum ApiError {
     BadRequest(Option<String>),
     InternalServerError,
-    Redirect(String)
 }
 
 impl IntoResponse for ApiError {
@@ -53,8 +55,7 @@ impl IntoResponse for ApiError {
                     None => (StatusCode::BAD_REQUEST).into_response(),
                 }
             },
-            Self::InternalServerError => (StatusCode::INTERNAL_SERVER_ERROR).into_response(),
-            Self::Redirect(url) => (Redirect::permanent(&url)).into_response()
+            Self::InternalServerError => (StatusCode::INTERNAL_SERVER_ERROR).into_response()
         }
     }
 }

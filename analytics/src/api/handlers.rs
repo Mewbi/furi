@@ -1,27 +1,27 @@
-use axum::{
-    Json,
-    extract::State
-};
-use serde::Deserialize;
+use axum::extract::{State, Path};
 use std::sync::Arc;
-use super::response::{ApiResponse, ApiError};
+use super::response::{ApiError, ApiResponse, OkTypes};
 
 use crate::state::AppState;
 use crate::infrastructure::repository::Repository;
 
-#[derive(Deserialize)]
-pub struct UserUrl {
-    url: String
-}
 
 pub async fn status() -> Result<ApiResponse, ApiError>  {
-    Ok(ApiResponse::OK(Some("Ok".to_string())))
+    Ok(ApiResponse::OK(OkTypes::Empty))
 }
 
-pub async fn create_url<T:Repository + Send + Sync>(
+pub async fn get_uri_metrics<T:Repository + Send + Sync>(
     State(state): State<Arc<AppState<T>>>,
-    Json(data): Json<UserUrl>
+    Path(id): Path<String>
 ) -> Result<ApiResponse, ApiError> {
-    Ok(ApiResponse::OK(Some("Ok".to_string())))
+    match state.repository.get_uri_metrics(id.clone()).await {
+        Ok(metrics) => {
+            return Ok(ApiResponse::OK(OkTypes::Metrics(metrics)));
+        },
+        Err(err) => {
+            println!("error getting uri metrics: {}", err);
+            return Err(ApiError::InternalServerError);
+        }
+    };
 }
 
