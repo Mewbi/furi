@@ -5,4 +5,5 @@ CREATE TABLE IF NOT EXISTS furi.analytics_1hour (
   `country` LowCardinality(String),
   `count` UInt64
 ) ENGINE = SummingMergeTree()
-ORDER BY (date, uri, device_type, country);
+PRIMARY KEY (uri)
+ORDER BY (uri, date, device_type, country);
