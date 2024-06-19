@@ -78,13 +78,13 @@ A tip is edit your `/etc/hosts` to point every service hostname to your localhos
 To access the `clickhouse`, execute
 
 ```sh
-docker exec -it clickhouse clickhouse-client
+docker exec -it furi_clickhouse clickhouse-client
 ```
 
 To access the `postgres`, execute
 
 ```sh
-docker exec -it postgres psql -U <user> -d <database>
+docker exec -it furi_postgres psql -U <user> -d <database>
 ```
 
 It is possible to manually send data to a `redpanda` topic using `kafkacat`:
@@ -95,7 +95,7 @@ echo '{"key":"key1", "value":"value1"}' | kafkacat -b redpanda:9092 -t my-topic 
 
 To consume a `redpanda` topic from beginning
 ```sh
-kafkacat -b redpanda:9092 -t my-topic -C -o beginning
+kcat -b redpanda:9092 -t my-topic -C -o beginning
 ```
 
 ## 🤝 Contributing

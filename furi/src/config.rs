@@ -38,13 +38,13 @@ pub struct PostgresConfig {
 pub struct RedpandaConfig {
     pub host: String,
     pub port: u16,
-    pub send_interval: u64
+    pub send_interval: u64,
 }
 
 #[derive(Debug, Deserialize, Default, Clone)]
 pub struct GeoipConfig {
     pub country_file: String,
-    pub city_file: String,
+    // pub city_file: String,
 }
 
 pub fn read_config_file(path: &str) -> Result<AppConfig, Box<dyn std::error::Error>> {

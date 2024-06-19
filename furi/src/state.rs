@@ -14,7 +14,6 @@ pub struct AppState<T:Repository> {
     pub analytics: Sender<UserData>
 }
 
-
 pub async fn init_state(tx: Sender<UserData>) -> Arc<AppState<Databases>> {
 
     let conf = match read_config_file("config.toml") {
