@@ -1,128 +1,108 @@
-<script>
-  // TODO: Change it to use lang Typescript
-import { use } from "echarts/core";
-import { CanvasRenderer } from "echarts/renderers";
-import { LineChart } from "echarts/charts";
-import {
-  TooltipComponent,
-  LegendComponent,
-  GridComponent,
-  ToolboxComponent,
-  BrushComponent,
-  DataZoomComponent,
-  MarkLineComponent,
-} from "echarts/components";
-import VChart from "vue-echarts";
+<script setup lang="ts">
+  import * as echarts from 'echarts';
+  import { use } from 'echarts/core';
+  import { CanvasRenderer } from 'echarts/renderers';
+  import { LineChart } from 'echarts/charts';
+  import { TitleComponent, TooltipComponent, LegendComponent } from 'echarts/components';
+  import VChart from 'vue-echarts';
+  import { ref } from 'vue';
 
-use([
-  CanvasRenderer,
-  LineChart,
-  TooltipComponent,
-  LegendComponent,
-  GridComponent,
-  ToolboxComponent,
-  BrushComponent,
-  DataZoomComponent,
-  MarkLineComponent,
-]);
+  use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, LegendComponent]);
 
-export default {
-  name: "LineChart",
-  components: {
-    VChart,
-  },
+  const props = defineProps({
+    data: {
+      type: Object,
+      required: true,
+    },
+  });
 
-  props: ["options"],
-
-  data() {
-    return { emitRestore: true };
-  },
-
-  computed: {
-    chartOptions() {
-      return {
-        ...this.options,
-
-        brush: {
-          xAxisIndex: "all",
-          outOfBrush: {
-            colorAlpha: 0.1,
+  let chart = ref();
+  if (props.data && Array.isArray(props.data)) {
+    chart = ref({
+      color: ['#32c9db'],
+      title: {
+        text: 'Requests',
+        subtext: 'Amount of requests that accessed your link',
+        left: 'center',
+        textStyle: {
+          color: '#ffffff',
+        },
+        subtextStyle: {
+          color: '#ffffff',
+        },
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          label: {
+            backgroundColor: '#6a7985',
           },
         },
-
-        grid: {
-          top: 100,
-          left: "10px",
-          right: "3%",
-          containLabel: true,
-          tooltip: {
-            show: true,
-            axisPointer: {
-              type: "line",
-            },
-          },
+      },
+      legend: {
+        orient: 'vertical',
+        left: 'left',
+        bottom: 'bottom',
+        textStyle: {
+          color: '#ffffff',
         },
-      };
-    },
-  },
-
-  mounted() {
-    setTimeout(() => {
-      this.enableSelectToZoom();
-    }, 200);
-  },
-  methods: {
-    enableSelectToZoom(forcedReset = false) {
-      const lineChart = this.$refs.lineChart;
-      lineChart.dispatchAction({
-        type: "takeGlobalCursor",
-        key: "dataZoomSelect",
-        dataZoomSelectActive: true,
-      });
-
-      if (forcedReset) {
-        if (this.emitRestore) return this.$emit("resetTime");
-
-        this.emitRestore = true;
-      }
-    },
-    emitZoom(event) {
-      if (!event.batch) return;
-
-      this.$emit("zoom", {
-        start: parseInt(event.batch[0].startValue, 10),
-        end: parseInt(event.batch[0].endValue, 10),
-      });
-    },
-    restoreChart() {
-      this.emitRestore = false;
-
-      const interval = setInterval(() => {
-        if (this.$refs.lineChart) {
-          this.$refs.lineChart.dispatchAction({
-            type: "restore",
-          });
-          clearInterval(interval);
-        }
-      }, 50);
-    },
-  },
-};
+      },
+      toolbox: {
+        feature: {
+          saveAsImage: {},
+        },
+      },
+      xAxis: [
+        {
+          type: 'category',
+          boundaryGap: false,
+          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        },
+      ],
+      yAxis: [
+        {
+          type: 'value',
+        },
+      ],
+      series: [
+        {
+          name: 'Requests',
+          type: 'line',
+          stack: 'Total',
+          smooth: true,
+          lineStyle: {
+            width: 0,
+          },
+          showSymbol: false,
+          areaStyle: {
+            opacity: 0.8,
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              {
+                offset: 0,
+                color: 'rgb(128, 255, 165)',
+              },
+              {
+                offset: 1,
+                color: 'rgb(1, 191, 236)',
+              },
+            ]),
+          },
+          emphasis: {
+            focus: 'series',
+          },
+          data: [140, 232, 101, 264, 90, 340, 250],
+        },
+      ],
+    });
+  }
 </script>
 
 <template>
-  <v-chart
-    class="chart"
-    :option="chartOptions"
-    ref="lineChart"
-    @restore="enableSelectToZoom(true)"
-    @datazoom="emitZoom"
-    autoresize
-  />
+  <v-chart ref="lineChart" :option="chart" class="chart h-full w-full" />
 </template>
 
 <style scoped>
-.chart {
-  height: 100vh;
-}
+  .chart {
+    height: 300px;
+  }
 </style>

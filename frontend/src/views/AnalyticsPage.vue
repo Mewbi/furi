@@ -2,99 +2,41 @@
   import FooterComponent from '../components/core/FooterComponent.vue';
   import AnalyticsSearch from '../components/core/AnalyticsSearch.vue';
   import { RouterLink } from 'vue-router';
+  import GeoChart from '../components/charts/GeoChart.vue';
+  import LineChart from '../components/charts/LineChart.vue';
+  import PieChart from '../components/charts/PieChart.vue';
+  import { UriMetricsResponse } from '../services/api';
+  import { useRouter } from 'vue-router';
 
-  // import GeoChart from '../components/charts/GeoChart.vue';
-  import { use } from 'echarts/core';
-  import { CanvasRenderer } from 'echarts/renderers';
-  import { LineChart } from 'echarts/charts';
-  import {
-    TooltipComponent,
-    LegendComponent,
-    GridComponent,
-    ToolboxComponent,
-    BrushComponent,
-    DataZoomComponent,
-    MarkLineComponent,
-  } from 'echarts/components';
-  import VChart from 'vue-echarts';
+  const router = useRouter();
+  const uri = router.currentRoute.value.params.id as string;
 
-  use([
-    CanvasRenderer,
-    LineChart,
-    TooltipComponent,
-    LegendComponent,
-    GridComponent,
-    ToolboxComponent,
-    BrushComponent,
-    DataZoomComponent,
-    MarkLineComponent,
-  ]);
-
-  const chart = {
-    color: ['#18181B', 'orange'],
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'line',
-      },
-    },
-    legend: {
-      left: 0,
-      height: '140',
-      textStyle: { fontSize: 18 },
-      icon: 'circle',
-    },
-    xAxis: [
-      {
-        type: 'time',
-        boundaryGap: false,
-        data: [100, 110, 120],
-      },
-    ],
-    yAxis: [
-      {
-        type: 'value',
-      },
-    ],
-    series: [
-      {
-        name: 'Requisições legítimas',
-        type: 'line',
-        stack: 'Total',
-        showSymbol: false,
-        areaStyle: {},
-        data: [10, 20, 30],
-      },
-    ],
-    dataZoom: [],
-    toolbox: {
-      right: 0,
-      feature: {
-        dataZoom: {
-          show: true,
-          yAxisIndex: false,
-          icon: {
-            zoom: 'blank',
-            back: 'blank',
-          },
-        },
-        restore: {
-          show: true,
-          title: 'Resetar zoom',
-        },
-        brush: {
-          show: false,
-        },
-      },
-    },
+  const data = {
+    device_count: [
+      { device_type: 'Type A', count: 10 },
+      { device_type: 'Type B', count: 20 },
+      // Add more data points as needed
+    ]
   };
+
+  const time_series = {
+    data: [
+      { date: 1719259709, count: 10 },
+      { date: 1719259720, count: 20 },
+      // Add more data points as needed
+    ]
+  };
+
+  const populateData = (data: UriMetricsResponse) => {
+    console.log(data);
+  }
 </script>
 
 <template>
   <div
     class="flex flex-col justify-between w-full h-full min-h-screen bg-white dark:bg-gray-800 p-8"
   >
-    <div class="flex flex-col md:flex-row md:gap-x-2 items-center justify-center h-full">
+    <div class="flex flex-col md:flex-row md:gap-x-2 items-center justify-center h-full mb-6">
       <div class="w-full max-w-lg flex flex-col items-center">
         <RouterLink :to="{ name: 'home' }">
           <picture>
@@ -102,17 +44,28 @@
             <img src="/logo_dark.png" class="w-40 h-40 mb-6" />
           </picture>
         </RouterLink>
-        
-        <AnalyticsSearch />
-      </div>
-      
 
+        <h1 class="text-gray-900 dark:text-white text-2xl text-wrap font-bold">Analytics Metrics of: {{ uri }}</h1>
+        
+        <AnalyticsSearch @analyticsResult = "populateData" />
+      </div>
     </div>
 
     <div class="flex flex-col md:flex-row md:gap-x-2 items-center justify-center h-full">
       <div class="dark:text-white w-full max-w-md text-wrap space-y-2 pl-1 pr-1">
-        <p>Boianasdkasjdf</p>
-        <v-chart ref="lineChart" :options="chart" class="w-full h-full" />
+        <LineChart :data="time_series.data"/>
+      </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:gap-x-2 items-center justify-center h-full">
+      <div class="dark:text-white w-full max-w-md text-wrap space-y-2 pl-1 pr-1">
+        <GeoChart />
+      </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:gap-x-2 items-center justify-center h-full">
+      <div class="dark:text-white w-full max-w-md text-wrap space-y-2 pl-1 pr-1">
+        <PieChart :data="data"/>
       </div>
     </div>
 

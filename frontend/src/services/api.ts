@@ -5,7 +5,7 @@ type ShortUrlResponse = {
   short_url: string;
 };
 
-type UriMetricsResponse = {
+export type UriMetricsResponse = {
   uri: string,
   req_total: number,
   req_time_series: UriRequestTimeSeries[],
