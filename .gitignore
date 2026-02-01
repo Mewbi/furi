@@ -13,31 +13,31 @@ furi/target/
 **/config.prod.toml
 **/.env
 furi/geoip/*.mmdb
+furi/geoip/*.gz
 
-analytics/debug/
-analytics/target/
+furi_analytics/debug/
+furi_analytics/target/
 
 ## Frontend
 # Logs
-frontend/logs
-frontend/*.log
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
-frontend/pnpm-debug.log*
-frontend/lerna-debug.log*
-frontend/node_modules
-frontend/dist
-frontend/dist-ssr
-frontend/*.local
+furi_web/logs
+furi_web/*.log
+furi_web/npm-debug.log*
+furi_web/yarn-debug.log*
+furi_web/yarn-error.log*
+furi_web/pnpm-debug.log*
+furi_web/lerna-debug.log*
+furi_web/node_modules
+furi_web/dist
+furi_web/dist-ssr
+furi_web/*.local
 
 # Editor directories and files
-frontend/.vscode/*
-frontend/.idea
-frontend/.DS_Store
-frontend/*.suo
-frontend/*.ntvs*
-frontend/*.njsproj
-frontend/*.sln
-frontend/*.sw?
-
+furi_web/.vscode/*
+furi_web/.idea
+furi_web/.DS_Store
+furi_web/*.suo
+furi_web/*.ntvs*
+furi_web/*.njsproj
+furi_web/*.sln
+furi_web/*.sw?

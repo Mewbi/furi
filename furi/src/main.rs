@@ -8,7 +8,7 @@ use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio::task;
 
 use api::router::create_router;
-use infrastructure::redpanda::{handle_user_data, UserData};
+use infrastructure::timescale::{create_pool, handle_user_data, UserData};
 use state::init_state;
 
 #[tokio::main]
@@ -20,7 +20,15 @@ async fn main() {
     let (tx, rx): (Sender<UserData>, Receiver<UserData>) = mpsc::channel(1000);
 
     let state = init_state(tx).await;
-    task::spawn(handle_user_data(rx, state.config.clone()));
+
+    let timescale_pool = match create_pool(&state.config.timescale).await {
+        Ok(pool) => pool,
+        Err(err) => panic!("Error connecting to TimescaleDB: {}", err),
+    };
+
+    let buffer_size = state.config.timescale.buffer_size;
+    let flush_interval = state.config.timescale.flush_interval;
+    task::spawn(handle_user_data(rx, timescale_pool, buffer_size, flush_interval));
 
     let address: String = format!("{}:{}", state.config.server.host, state.config.server.port);
 

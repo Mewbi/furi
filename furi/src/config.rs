@@ -9,7 +9,7 @@ pub struct AppConfig {
     pub server: ServerConfig,
     pub redis: RedisConfig,
     pub postgres: PostgresConfig,
-    pub redpanda: RedpandaConfig,
+    pub timescale: TimescaleConfig,
     pub geoip: GeoipConfig,
 }
 
@@ -35,10 +35,14 @@ pub struct PostgresConfig {
 }
 
 #[derive(Debug, Deserialize, Default, Clone)]
-pub struct RedpandaConfig {
+pub struct TimescaleConfig {
     pub host: String,
     pub port: u16,
-    pub send_interval: u64,
+    pub user: String,
+    pub password: String,
+    pub db: String,
+    pub buffer_size: usize,
+    pub flush_interval: u64,
 }
 
 #[derive(Debug, Deserialize, Default, Clone)]

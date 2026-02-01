@@ -95,7 +95,7 @@ pub async fn get_uri_metrics<T: Repository + Send + Sync>(
         }
     };
 
-    let mut total: u64 = 0;
+    let mut total: i64 = 0;
     for r in uri_access_count.iter() {
         total += r.count;
     }

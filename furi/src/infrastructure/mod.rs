@@ -1,2 +1,2 @@
 pub mod repository;
-pub mod redpanda;
+pub mod timescale;

@@ -17,10 +17,14 @@ domain = "https://furi.live"
   password = "password"
   db = "db"
 
-[redpanda]
-  host = "redpanda"
-  port = 9092
-  send_interval = 10
+[timescale]
+  host = "timescaledb"
+  port = 5432
+  user = "user"
+  password = "password"
+  db = "analytics"
+  buffer_size = 100
+  flush_interval = 10
 
 [geoip]
   country_file = "geoip/GeoLite2-Country.mmdb"

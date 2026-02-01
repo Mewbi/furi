@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::config::{read_config_file, AppConfig};
 use crate::infrastructure::{
     repository::{connect_redis, connect_postgres, read_geoip, Repository, Databases},
-    redpanda::UserData
+    timescale::UserData
 };
 
 #[derive(Debug)]

@@ -1,0 +1,13 @@
+name = "furi_analytics"
+
+[server]
+  port = 3001
+  host = "0.0.0.0"
+  cors_addr = "https://www.furi.live:8443"
+
+[timescale]
+  host = "timescaledb"
+  port = 5432
+  user = "user"
+  password = "password"
+  db = "analytics"

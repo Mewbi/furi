@@ -12,7 +12,7 @@ use tokio_postgres::error::SqlState;
 use chrono::prelude::*;
 use super::response::{ApiResponse, ApiError, ShortenerMessage};
 
-use crate::{infrastructure::redpanda::UserData, state::AppState};
+use crate::{infrastructure::timescale::UserData, state::AppState};
 use crate::infrastructure::repository::Repository;
 
 #[derive(Deserialize)]
@@ -71,7 +71,7 @@ pub async fn get_url<T:Repository + Send + Sync>(
         user_agent: user_agent.to_string()
     };
 
-    match state.repository.get_geoip(&ip).await {
+    match state.repository.get_geoip(&user_data.ip.clone()).await {
         Ok(geoip) => {
             match geoip.country.and_then(|c| c.iso_code) {
                 Some(country) => {
@@ -86,7 +86,7 @@ pub async fn get_url<T:Repository + Send + Sync>(
     }
 
     if let Err(err) = state.analytics.send(user_data).await {
-        println!("error sending user analytics througth channel: {}", err);
+        println!("error sending user analytics through channel: {}", err);
     }
 
     return Ok(ApiResponse::Redirect(url));

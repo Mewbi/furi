@@ -5,22 +5,24 @@ use std::fs;
 pub struct AppConfig {
     pub name: String,
     pub server: ServerConfig,
-    pub clickhouse: ClickhouseConfig
+    pub timescale: TimescaleConfig,
 }
 
 #[derive(Debug, Deserialize, Default)]
 pub struct ServerConfig {
     pub host: String,
     pub port: u16,
-    pub cors_addr: String
+    pub cors_addr: String,
 }
 
 #[derive(Debug, Deserialize, Default)]
-pub struct ClickhouseConfig {
+pub struct TimescaleConfig {
     pub host: String,
-    pub port: u16
+    pub port: u16,
+    pub user: String,
+    pub password: String,
+    pub db: String,
 }
-
 
 pub fn read_config_file(path: &str) -> Result<AppConfig, Box<dyn std::error::Error>> {
     let config_content = fs::read_to_string(path)?;

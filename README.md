@@ -20,9 +20,9 @@ After that, the access is sent to a [Web Server](./web-server/). Its responsibil
 
 The [Shortener API](./furi/) creates and stores the short and original URLs into database (a SQL-like database) and uses a cache layer (key-value database) to improve response performance.
 
-When a user accesses a short URL, metrics are collected from the user and sent to a message broker to be stored in the analytics database.
+When a user accesses a short URL, metrics are collected from the user and written asynchronously to TimescaleDB using a buffered channel pattern for efficient batch inserts.
 
-The [Analytics API](./analytics/) provides the frontend with the user metrics collected when a short URL is accessed. Basically, each short URL has its own user metrics.
+The [Analytics API](./furi_analytics/) provides the frontend with the user metrics collected when a short URL is accessed. TimescaleDB continuous aggregates automatically maintain pre-computed metrics at 1-minute, 1-hour, and 1-day intervals for fast querying.
 
 The project uses a simple architecture that can be scaled horizontally easily. To scale the process of accessing and shortening URLs, just instantiate more instances of the Shortener API and add them to the load balancer.
 
@@ -33,13 +33,12 @@ More details about each layer of the project can be found in the respective dire
 The technologies that this project uses or has been written in are:
 
 - [Shortener API](./furi/): [Rust](https://www.rust-lang.org/)
-- [Analytics API](./analytics/): [Rust](https://www.rust-lang.org/)
-- [FrontEnd](./frontend/): [Vue.js](https://vuejs.org/)
+- [Analytics API](./furi_analytics/): [Rust](https://www.rust-lang.org/)
+- [FrontEnd](./furi_web/): [Vue.js](https://vuejs.org/)
 - [Web Server](./web-server/): [Jequi](https://github.com/Termack/jequi)
 - Cache Database: [Redis](https://redis.io/)
 - URLs Database: [Postgres](https://www.postgresql.org/)
-- Analytics Database: [Clickhouse](https://clickhouse.com/)
-- Message Broker: [Redpanda](https://redpanda.com/)
+- Analytics Database: [TimescaleDB](https://www.timescale.com/)
 - CDN: [Cloudflare](https://www.cloudflare.com)
 
 ## 🏃‍♂️ Running Local
@@ -52,8 +51,9 @@ git clone git@github.com:Mewbi/furi.git
 Set every required configuration and environment file. (Remember to edit the file content)
 ```sh
 cp .env-example .env # Database config
-cp ./furi/config-example.toml ./furi/config.prod.toml # Furi API config
-cp ./frontend/.env-example ./frontend/.env # Frontend config
+cp ./furi/config-example.toml ./furi/config.toml # Furi API config
+cp ./furi_analytics/config-example.toml ./furi_analytics/config.toml # Analytics API config
+cp ./furi_web/.env-example ./furi_web/.env # Frontend config
 ```
 
 Generate SSL certificates and place them into the [certs](./certs/) directory. If you are using the default web server configuration, the certificate files must be named `furi-cert.pem` and `furi-key.key`. For more details about this, refer to the [certs](./certs/) directory.
@@ -70,32 +70,34 @@ The web server will start by default in port `8443`.
 A tip is edit your `/etc/hosts` to point every service hostname to your localhost, so you can simulate access using the domain name like:
 
 ```
-127.0.0.1 redpanda redis postgres clickhouse furi.live www.furi.live
+127.0.0.1 redis postgres timescaledb furi.live www.furi.live
 ```
 
 ### 🛠️ Useful Tools
 
-To access the `clickhouse`, execute
-
-```sh
-docker exec -it furi_clickhouse clickhouse-client
-```
-
-To access the `postgres`, execute
+To access `postgres` (URLs database), execute
 
 ```sh
 docker exec -it furi_postgres psql -U <user> -d <database>
 ```
 
-It is possible to manually send data to a `redpanda` topic using `kafkacat`:
+To access `timescaledb` (Analytics database), execute
 
 ```sh
-echo '{"key":"key1", "value":"value1"}' | kafkacat -b redpanda:9092 -t my-topic -P
-``` 
+docker exec -it furi_timescaledb psql -U <user> -d analytics
+```
 
-To consume a `redpanda` topic from beginning
-```sh
-kcat -b redpanda:9092 -t my-topic -C -o beginning
+Some useful TimescaleDB queries:
+
+```sql
+-- View raw analytics data
+SELECT * FROM analytics_raw ORDER BY time DESC LIMIT 10;
+
+-- View 1-minute aggregated metrics
+SELECT * FROM analytics_1min WHERE uri = '<short_uri>' ORDER BY bucket DESC;
+
+-- View continuous aggregate policies
+SELECT * FROM timescaledb_information.jobs WHERE application_name LIKE '%aggregate%';
 ```
 
 ## 🤝 Contributing

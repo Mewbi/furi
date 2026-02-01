@@ -21,41 +21,18 @@ services:
     networks:
       - api
 
-  redpanda:
-    image: redpandadata/redpanda:latest
-    container_name: furi_redpanda
-    command:
-      - redpanda
-      - start
-      - --overprovisioned
-      - --smp 1
-      - --memory 1G
-      - --reserve-memory 0M
-      - --node-id 0
-      - --check=false
-      - --advertise-kafka-addr redpanda
-    ports:
-      - "127.0.0.1:9092:9092"
-      - "127.0.0.1:9644:9644"
-    networks:
-      - redpanda_clickhouse
-      - api
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: furi_timescaledb
     environment:
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_NUM_PARTITIONS: 1
-
-  clickhouse:
-    image: clickhouse/clickhouse-server:latest
-    container_name: furi_clickhouse
+      POSTGRES_DB: ${TIMESCALE_DB}
+      POSTGRES_USER: ${TIMESCALE_USER}
+      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD}
     ports:
-      - "127.0.0.1:8123:8123"
-      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:5433:5432"
     networks:
-        - redpanda_clickhouse
-    volumes:
-      - ./analytics/clickhouse-config.xml:/etc/clickhouse-server/config.d/custom.xml
-    depends_on:
-      - redpanda
+      - api
+      - analytics
 
   frontend:
     build:
@@ -78,7 +55,7 @@ services:
     depends_on:
       - redis
       - postgres
-      - redpanda
+      - timescaledb
 
   furi-2:
     build:
@@ -92,7 +69,7 @@ services:
     depends_on:
       - redis
       - postgres
-      - redpanda
+      - timescaledb
 
   # nginx:
   #   image: nginx:1.25.4
@@ -114,6 +91,18 @@ services:
   #     - furi-1
   #     - furi-2
   #     - frontend
+
+  furi-analytics:
+    build: ./furi_analytics/
+    container_name: furi_analytics
+    restart: always
+    networks:
+      - api
+      - analytics
+    ports:
+      - "127.0.0.1:3003:3001"
+    depends_on:
+      - timescaledb
 
   jequi:
     image: ghcr.io/termack/jequi:v0.0.3-2
@@ -139,9 +128,9 @@ services:
       - frontend
 
 networks:
-  redpanda_clickhouse:
-    driver: bridge
   api:
+    driver: bridge
+  analytics:
     driver: bridge
 
 volumes:
