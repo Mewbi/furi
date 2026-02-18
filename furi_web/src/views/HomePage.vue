@@ -11,15 +11,13 @@
 
     <div class="flex flex-col md:flex-row md:gap-x-2 items-center justify-center h-full">
       <div class="w-full max-w-lg flex flex-col items-center">
-        <picture>
-          <source srcset="/logo_light.png" media="(prefers-color-scheme: dark)" />
-          <img src="/logo_dark.png" class="w-52 h-52 mb-6" />
-        </picture>
+        <img src="/logo_dark.png" class="w-52 h-52 mb-6 block dark:hidden" />
+        <img src="/logo_light.png" class="w-52 h-52 mb-6 hidden dark:block" />
 
-        <div class="dark:text-white w-full max-w-md text-wrap space-y-2 pl-1 pr-1">
-          <p>A <b>F</b>ast way to short an <b>URI</b>, in other words, an URL shortener.</p>
+        <div class="dark:text-white w-full max-w-md text-wrap text-center space-y-2 pl-1 pr-1">
+          <p>A <b>F</b>ast way to short your <b>URI</b>.</p>
           <p>It's simple, just paste your URL and get a small one.</p>
-          <p><s>And more, you can check analytics metrics of your URL.</s></p>
+          <p>And more, you can check <b>analytics</b> metrics of your URL.</p>
         </div>
       </div>
 

@@ -35,10 +35,11 @@
       return notifyStore.notify('An error occured to get uri metrics', NotificationType.Error);
     }
 
-    console.log(res);
     emit('analyticsResult', res);
-    notifyStore.notify('Success creating short url', NotificationType.Success);
+    notifyStore.notify('Success fetching metrics', NotificationType.Success);
   };
+
+  defineExpose({ getAnalytics });
 </script>
 
 <template>

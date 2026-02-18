@@ -4,29 +4,40 @@
   import { PieChart } from 'echarts/charts';
   import { TitleComponent, TooltipComponent, LegendComponent } from 'echarts/components';
   import VChart from 'vue-echarts';
-  import { ref } from 'vue';
+  import { computed, ref, onMounted, onUnmounted } from 'vue';
+
+  const isDark = ref(document.documentElement.classList.contains('dark'));
+  const observer = new MutationObserver(() => {
+    isDark.value = document.documentElement.classList.contains('dark');
+  });
+  onMounted(() => observer.observe(document.documentElement, { attributeFilter: ['class'] }));
+  onUnmounted(() => observer.disconnect());
 
   use([CanvasRenderer, PieChart, TitleComponent, TooltipComponent, LegendComponent]);
 
-  const props = defineProps({
+  const props = defineProps<{
     data: {
-      type: Object,
-      required: true,
-    },
-  });
+      device_count: Array<{ device_type: string; count: number }>;
+    };
+  }>();
 
-  let chart = ref();
-  if (props.data && Array.isArray(props.data.device_count)) {
-    chart = ref({
+  const chart = computed(() => {
+    if (!props.data || !Array.isArray(props.data.device_count)) {
+      return {};
+    }
+
+    const textColor = isDark.value ? '#ffffff' : '#111827';
+
+    return {
       title: {
         text: 'Device types',
         subtext: 'Devices that accessed your link',
         left: 'center',
         textStyle: {
-          color: '#ffffff',
+          color: textColor,
         },
         subtextStyle: {
-          color: '#ffffff',
+          color: textColor,
         },
       },
       tooltip: {
@@ -38,11 +49,11 @@
         },
       },
       legend: {
-        orient: 'vertical',
-        left: 'left',
+        orient: 'horizontal',
+        left: 'center',
         bottom: 'bottom',
         textStyle: {
-          color: '#ffffff',
+          color: textColor,
         },
       },
       series: [
@@ -55,7 +66,6 @@
           itemStyle: {
             borderRadius: 10,
           },
-
           data: props.data.device_count.map((d) => ({ name: d.device_type, value: d.count })),
           emphasis: {
             itemStyle: {
@@ -66,16 +76,28 @@
           },
         },
       ],
-    });
-  }
+    };
+  });
 </script>
 
 <template>
-  <v-chart ref="pieChart" :option="chart" class="chart" />
+  <v-chart ref="pieChart" :option="chart" class="chart w-full" autoresize />
 </template>
 
 <style scoped>
   .chart {
-    height: 300px;
+    height: 280px;
+  }
+
+  @media (min-width: 768px) {
+    .chart {
+      height: 350px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .chart {
+      height: 400px;
+    }
   }
 </style>

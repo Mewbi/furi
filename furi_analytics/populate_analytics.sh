@@ -1,8 +1,11 @@
 #!/bin/bash
 
-# Define your Redpanda broker and topic
-BROKER="127.0.0.1:9092"
-TOPIC="analytics"
+# Define timescale connection parameters
+HOST="localhost"
+PORT="5433"
+USER="user"
+PASSWORD="pass"
+DB="analytics"
 N=${1:-100}
 
 # Function to generate a random IP address
@@ -12,7 +15,10 @@ generate_ip() {
 
 # Function to generate a random date in ISO 8601 format
 generate_date() {
-	date +%s
+	# Generate a random variation
+	d=$(date +%s)
+	v=$(($RANDOM % 3600))
+	echo $((d - v))
 }
 
 # Function to generate a random URI
@@ -33,25 +39,24 @@ generate_country() {
 	echo "${countries[$RANDOM % ${#countries[@]}]}"
 }
 
-# Function to generate a JSON object
-generate_json() {
+# Function to generate a sql statement for inserting a record into the analytics table 
+generate_sql() {
 	date=$(generate_date)
 	uri=$(generate_uri)
 	ip=$(generate_ip)
 	user_agent=$(generate_user_agent)
 	country=$(generate_country)
 
-	echo "{\"date\":\"$date\",\"uri\":\"$uri\",\"ip\":\"$ip\",\"user_agent\":\"$user_agent\",\"country\":\"$country\"}"
+	echo "INSERT INTO analytics_raw (time, uri, ip, user_agent, country) VALUES (to_timestamp($date), '$uri', '$ip', '$user_agent', '$country');"
 }
 
-# Produce messages to the topic
-produce_messages() {
+populate_database() {
 	for i in $(seq ${N}); do
-		json=$(generate_json)
-		echo "$json" | kcat -b $BROKER -t $TOPIC -P
-		echo "${i} - Produced message: $json"
+		sql=$(generate_sql)
+		PGPASSWORD=$PASSWORD psql -h $HOST -p $PORT -U $USER -d $DB -c "$sql"
+		echo "${i} - Inserted message: $sql"
 	done
 }
 
-# Run the produce_messages function
-produce_messages
+# Run the populate_database function
+populate_database

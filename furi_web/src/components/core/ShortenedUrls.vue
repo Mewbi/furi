@@ -2,6 +2,9 @@
   import { NotificationType, useNotifyStore } from '../../stores/notifyStore';
   import { useUrlStore } from '../../stores/urlStore';
   import CloseIcon from '../icons/CloseIcon.vue';
+  import CopyIcon from '../icons/CopyIcon.vue';
+  import AnalyticsIcon from '../icons/AnalyticsIcon.vue';
+  import { RouterLink } from 'vue-router';
 
   const notifyStore = useNotifyStore();
   const urlStore = useUrlStore();
@@ -57,6 +60,8 @@
     return url
   }
 
+  const shortCode = (url: string) => url.split('/').pop() ?? url;
+
 </script>
 <template>
   <div v-if="urlStore.shortenedUrls.length" class="w-full max-w-md mt-8 mb-2">
@@ -79,12 +84,16 @@
             </a>
             <p class="text-xs text-gray-500 text-wrap">{{ computedUrl(short.original_url) }}</p>
           </div>
-          <button
-            @click="getUrl(short.short_url)"
-            class="dark:text-white hover:text-gray-500 inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3"
-          >
-            Copy
-          </button>
+          <div class="flex gap-1 items-center">
+            <button @click="getUrl(short.short_url)" title="Copy"
+              class="inline-flex items-center justify-center rounded-md p-1.5 transition-colors hover:bg-gray-200 dark:hover:bg-gray-600">
+              <CopyIcon />
+            </button>
+            <RouterLink :to="{ name: 'analytics', params: { id: shortCode(short.short_url) } }" title="Analytics"
+              class="inline-flex items-center justify-center rounded-md p-1.5 transition-colors hover:bg-gray-200 dark:hover:bg-gray-600">
+              <AnalyticsIcon />
+            </RouterLink>
+          </div>
         </div>
         <button @click="deleteUrl(short.short_url)" class="absolute -top-2 -left-2">
           <CloseIcon />

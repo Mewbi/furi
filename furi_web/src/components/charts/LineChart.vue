@@ -5,30 +5,47 @@
   import { LineChart } from 'echarts/charts';
   import { TitleComponent, TooltipComponent, LegendComponent } from 'echarts/components';
   import VChart from 'vue-echarts';
-  import { ref } from 'vue';
+  import { computed, ref, onMounted, onUnmounted } from 'vue';
+
+  const isDark = ref(document.documentElement.classList.contains('dark'));
+  const observer = new MutationObserver(() => {
+    isDark.value = document.documentElement.classList.contains('dark');
+  });
+  onMounted(() => observer.observe(document.documentElement, { attributeFilter: ['class'] }));
+  onUnmounted(() => observer.disconnect());
 
   use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, LegendComponent]);
 
-  const props = defineProps({
-    data: {
-      type: Object,
-      required: true,
-    },
-  });
+  const props = defineProps<{
+    data: Array<{ date: number; count: number }>;
+  }>();
 
-  let chart = ref();
-  if (props.data && Array.isArray(props.data)) {
-    chart = ref({
+  const formatDate = (timestamp: number): string => {
+    const date = new Date(timestamp * 1000);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[date.getMonth()]}/${date.getDate()} ${date.getHours()}:${date.getMinutes() < 10 ? '0' : ''}${date.getMinutes()}`;
+  };
+
+  const chart = computed(() => {
+    if (!props.data || !Array.isArray(props.data) || props.data.length === 0) {
+      return {};
+    }
+
+    const dates = props.data.map(d => formatDate(d.date));
+    const counts = props.data.map(d => d.count);
+    const textColor = isDark.value ? '#ffffff' : '#111827';
+
+    return {
       color: ['#32c9db'],
       title: {
         text: 'Requests',
         subtext: 'Amount of requests that accessed your link',
         left: 'center',
         textStyle: {
-          color: '#ffffff',
+          color: textColor,
         },
         subtextStyle: {
-          color: '#ffffff',
+          color: textColor,
         },
       },
       tooltip: {
@@ -40,11 +57,11 @@
         },
       },
       legend: {
-        orient: 'vertical',
-        left: 'left',
+        orient: 'horizontal',
+        left: 'center',
         bottom: 'bottom',
         textStyle: {
-          color: '#ffffff',
+          color: textColor,
         },
       },
       toolbox: {
@@ -56,7 +73,7 @@
         {
           type: 'category',
           boundaryGap: false,
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          data: dates,
         },
       ],
       yAxis: [
@@ -73,7 +90,8 @@
           lineStyle: {
             width: 0,
           },
-          showSymbol: false,
+          showSymbol: props.data.length === 1,
+          symbolSize: props.data.length === 1 ? 10 : 4,
           areaStyle: {
             opacity: 0.8,
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -90,19 +108,31 @@
           emphasis: {
             focus: 'series',
           },
-          data: [140, 232, 101, 264, 90, 340, 250],
+          data: counts,
         },
       ],
-    });
-  }
+    };
+  });
 </script>
 
 <template>
-  <v-chart ref="lineChart" :option="chart" class="chart h-full w-full" />
+  <v-chart ref="lineChart" :option="chart" class="chart w-full" autoresize />
 </template>
 
 <style scoped>
   .chart {
-    height: 300px;
+    height: 250px;
+  }
+
+  @media (min-width: 768px) {
+    .chart {
+      height: 350px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .chart {
+      height: 400px;
+    }
   }
 </style>
