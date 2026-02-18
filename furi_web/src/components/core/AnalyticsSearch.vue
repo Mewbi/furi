@@ -24,11 +24,11 @@
   const aggregation = ref('1min');
 
   const getAnalytics = async () => {
-  
+
     const fromTimestamp = new Date(fromDate.value).getTime() / 1000;
     const toTimestamp = new Date(toDate.value).getTime() / 1000;
 
-    const res = await api.getAnalytics(uri, fromTimestamp, toTimestamp, '1min');
+    const res = await api.getAnalytics(uri, fromTimestamp, toTimestamp, aggregation.value);
     if ('error' in res) {
       if ('message' in res && res.message)
         return notifyStore.notify(`${res.message}`, NotificationType.Error);
@@ -43,51 +43,46 @@
 </script>
 
 <template>
-  <div class="mt-8 w-full max-w-md relative mb-4">
+  <div class="mt-8 w-full max-w-md">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
 
-    <div class="flex flex-col space-y-4">
-      <div class="flex ">
-        <label for="fromDate" class="pl-10 w-60 h-full rounded-s-md p-2.5 text-gray-900 bg-gray-300 dark:text-white dark:bg-gray-700"><b>From Date</b></label>
-        <input
-          type="datetime-local"
-          v-model="fromDate"
-          id="fromDate"
-          class="ps-10 bg-gray-100 text-gray-900 text-sm rounded-e-md w-full p-2.5 dark:bg-gray-600 dark:placeholder-gray-400 dark:text-white font-bold"
-        />
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Query range</h2>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1">
+          <label for="fromDate" class="text-sm font-medium text-gray-700 dark:text-gray-300">From</label>
+          <input type="datetime-local" v-model="fromDate" id="fromDate"
+            class="bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white text-sm rounded-md p-2.5
+                   border border-gray-300 dark:border-gray-500
+                   focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="toDate" class="text-sm font-medium text-gray-700 dark:text-gray-300">To</label>
+          <input type="datetime-local" v-model="toDate" id="toDate"
+            class="bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white text-sm rounded-md p-2.5
+                   border border-gray-300 dark:border-gray-500
+                   focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500" />
+        </div>
       </div>
 
-      <div class="flex ">
-        <label for="toDate" class="pl-10 w-60 h-full rounded-s-md p-2.5 text-gray-900 bg-gray-300 dark:text-white dark:bg-gray-700"><b>To Date</b></label>
-        <input
-          type="datetime-local"
-          v-model="toDate"
-          id="toDate"
-          class="ps-10 bg-gray-100 text-gray-900 text-sm rounded-e-md w-full p-2.5 dark:bg-gray-600 dark:placeholder-gray-400 dark:text-white font-bold"
-        />
-      </div>
-
-      <div class="flex ">
-        <label for="aggregation" class=" pl-10 w-60 h-full rounded-s-md p-2.5 text-gray-900 bg-gray-300 dark:text-white dark:bg-gray-700"><b>Aggregation</b></label>
-        <select
-          v-model="aggregation"
-          id="aggregation"
-          class="ps-10 w-full bg-gray-100 text-gray-900 text-sm rounded-e-md p-2.5 dark:bg-gray-600 dark:placeholder-gray-400 dark:text-white font-bold"
-        >
+      <div class="flex flex-col gap-1 mt-3">
+        <label for="aggregation" class="text-sm font-medium text-gray-700 dark:text-gray-300">Aggregation</label>
+        <select v-model="aggregation" id="aggregation"
+          class="bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white text-sm rounded-md p-2.5
+                 border border-gray-300 dark:border-gray-500
+                 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500">
           <option value="1min">By minute</option>
           <option value="1hour">By hour</option>
-          <option value="1d">By day</option>
+          <option value="1day">By day</option>
         </select>
       </div>
 
-      <div class="flex flex-col space-y-2">
-        <button
-          @click="getAnalytics"
-          :disabled="false"
-          class="top-0 end-0 p-2.5 h-full text-sm font-bold text-white dark:text-black bg-gray-600 rounded-md border hover:bg-gray-700 focus:ring-4 focus:outline-none focus:ring-gray-300 dark:bg-gray-200 dark:hover:bg-gray-300 dark:focus:ring-gray-800"
-        >
-          Search
-        </button>
-      </div>
+      <button @click="getAnalytics" class="mt-4 w-full p-2.5 text-sm font-bold text-white dark:text-black
+        bg-gray-600 rounded-md hover:bg-gray-700 focus:ring-4 focus:outline-none focus:ring-gray-300
+        dark:bg-gray-200 dark:hover:bg-gray-300 dark:focus:ring-gray-800 transition-colors">
+        Search
+      </button>
+
     </div>
   </div>
 </template>
