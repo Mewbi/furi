@@ -1,5 +1,5 @@
 [package]
-name = "analytics"
+name = "furi_analytics"
 version = "0.1.0"
 edition = "2021"
 

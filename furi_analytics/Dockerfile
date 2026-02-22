@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y musl-tools
 
 RUN rustup target add x86_64-unknown-linux-musl
 
-RUN USER=root cargo new --bin furi
+RUN USER=root cargo new --bin furi_analytics
 
 WORKDIR /app
 
@@ -12,8 +12,6 @@ COPY Cargo.toml Cargo.lock ./
 COPY config.prod.toml ./config.toml
 
 COPY src ./src
-
-COPY geoip ./geoip
 
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
@@ -23,11 +21,10 @@ WORKDIR /app
 
 RUN apk --no-cache add ca-certificates libgcc gcompat
 
-COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/furi .
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/furi_analytics .
 COPY --from=builder /app/config.toml .
 COPY --from=builder /app/src/infrastructure/migrations/ ./src/infrastructure/migrations/
-COPY --from=builder /app/geoip/ ./geoip/
 
-EXPOSE 3000
+EXPOSE 3003
 
-CMD ["./furi"]
+CMD ["./furi_analytics"]

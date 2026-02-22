@@ -24,6 +24,11 @@ services:
   timescaledb:
     image: timescale/timescaledb:latest-pg16
     container_name: furi_timescaledb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALE_USER} -d ${TIMESCALE_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     environment:
       POSTGRES_DB: ${TIMESCALE_DB}
       POSTGRES_USER: ${TIMESCALE_USER}
@@ -34,9 +39,9 @@ services:
       - api
       - analytics
 
-  frontend:
+  furi-web:
     build:
-      ./frontend/
+      ./furi_web/
     container_name: furi_frontend
     volumes:
       - static:/static/
@@ -53,9 +58,12 @@ services:
     ports:
       - "127.0.0.1:3001:3000"
     depends_on:
-      - redis
-      - postgres
-      - timescaledb
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_started
+      timescaledb:
+        condition: service_healthy
 
   furi-2:
     build:
@@ -67,30 +75,12 @@ services:
     ports:
       - "127.0.0.1:3002:3000"
     depends_on:
-      - redis
-      - postgres
-      - timescaledb
-
-  # nginx:
-  #   image: nginx:1.25.4
-  #   container_name: furi_nginx
-  #   hostname: nginx
-  #   restart: always
-  #   networks:
-  #     - api
-  #   ports:
-  #     - "8443:443"
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ./certs/furi-cert.pem:/etc/ssl/furi-cert.pem:ro
-  #     - ./certs/furi-key.key:/etc/ssl/furi-key.key:ro
-  #     - static:/etc/nginx/html/:ro
-
-  #   depends_on:
-  #     - furi-1
-  #     - furi-2
-  #     - frontend
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_started
+      timescaledb:
+        condition: service_healthy
 
   furi-analytics:
     build: ./furi_analytics/
@@ -100,9 +90,10 @@ services:
       - api
       - analytics
     ports:
-      - "127.0.0.1:3003:3001"
+      - "127.0.0.1:3003:3003"
     depends_on:
-      - timescaledb
+      timescaledb:
+        condition: service_healthy
 
   jequi:
     image: ghcr.io/termack/jequi:v0.0.3-2
@@ -110,22 +101,23 @@ services:
     hostname: jequi
     restart: always
     ports:
-      - "8443:7878"
-      - "443:7878"
+      - "127.0.0.1:8443:7878"
+      - "127.0.0.1:443:7878"
     networks:
       - api
+      - analytics
 
     volumes:
       - ./web-server/config.yaml:/etc/jequi/conf.yaml:ro
-      - ./web-server/loadbalancer:/etc/jequi/plugins/jequi_go/go/handle
+      #- ./web-server/loadbalancer:/etc/jequi/plugins/jequi_go/go/handle
       - ./certs/furi-cert.pem:/etc/ssl/furi-cert.pem:ro
-      - ./certs/furi-key.key:/etc/ssl/furi-key.key:ro
+      - ./certs/furi-key.pem:/etc/ssl/furi-key.pem:ro
       - static:/etc/jequi/html/:ro
 
     depends_on:
       - furi-1
       - furi-2
-      - frontend
+      - furi-analytics
 
 networks:
   api:

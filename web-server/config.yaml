@@ -1,18 +1,24 @@
 tls_active: true
 ip: 0.0.0.0
 host:
-  www.furi.live:
+  www.furi.local:
     ssl_certificate: /etc/ssl/furi-cert.pem
-    ssl_key: /etc/ssl/furi-key.key
+    ssl_key: /etc/ssl/furi-key.pem
     not_found_file_path: /etc/jequi/html/index.html
     path:
       /assets/:
         static_files_path: /etc/jequi/html/assets/
+      /analytics/:
+        static_files_path: /etc/jequi/html/
       /:
-
         static_files_path: /etc/jequi/html/
 
-  furi.live:
+  analytics.furi.local:
     ssl_certificate: /etc/ssl/furi-cert.pem
-    ssl_key: /etc/ssl/furi-key.key
-    proxy_address: ["http://furi-1:3000", "http://furi-2:3000"]
+    ssl_key: /etc/ssl/furi-key.pem
+    proxy_address: ["http://furi_analytics:3003"]
+
+  furi.local:
+    ssl_certificate: /etc/ssl/furi-cert.pem
+    ssl_key: /etc/ssl/furi-key.pem
+    proxy_address: ["http://furi_api_1:3000", "http://furi_api_2:3000"]

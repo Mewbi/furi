@@ -31,6 +31,7 @@ furi_web/node_modules
 furi_web/dist
 furi_web/dist-ssr
 furi_web/*.local
+furi_web/.env
 
 # Editor directories and files
 furi_web/.vscode/*
