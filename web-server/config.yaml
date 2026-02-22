@@ -9,7 +9,7 @@ host:
       /assets/:
         static_files_path: /etc/jequi/html/assets/
       /analytics/:
-        static_files_path: /etc/jequi/html/
+        static_files_path: /etc/jequi/html/index.html
       /:
         static_files_path: /etc/jequi/html/
 
