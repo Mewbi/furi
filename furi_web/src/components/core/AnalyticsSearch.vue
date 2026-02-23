@@ -48,7 +48,7 @@
 
       <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Query range</h2>
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div class="flex flex-col gap-1">
           <label for="fromDate" class="text-sm font-medium text-gray-700 dark:text-gray-300">From</label>
           <input type="datetime-local" v-model="fromDate" id="fromDate"
