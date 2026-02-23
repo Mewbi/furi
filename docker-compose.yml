@@ -109,7 +109,6 @@ services:
 
     volumes:
       - ./web-server/config.yaml:/etc/jequi/conf.yaml:ro
-      #- ./web-server/loadbalancer:/etc/jequi/plugins/jequi_go/go/handle
       - ./certs/furi-cert.pem:/etc/ssl/furi-cert.pem:ro
       - ./certs/furi-key.pem:/etc/ssl/furi-key.pem:ro
       - static:/etc/jequi/html/:ro

@@ -21,7 +21,7 @@ export const useUrlStore = defineStore('urls', () => {
   };
 
   const getKnownUrls = (): ShortenedUrl[] => {
-    if (!shortenedUrls.value) {
+    if (!shortenedUrls.value.length) {
       const fromStorage = localStorage.getItem('known_urls');
 
       if (!fromStorage) return [];

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { onMounted } from 'vue';
   import { NotificationType, useNotifyStore } from '../../stores/notifyStore';
   import { useUrlStore } from '../../stores/urlStore';
   import CloseIcon from '../icons/CloseIcon.vue';
@@ -8,6 +9,10 @@
 
   const notifyStore = useNotifyStore();
   const urlStore = useUrlStore();
+
+  onMounted(() => {
+    urlStore.getKnownUrls();
+  });
 
   const fallbackCopyTextToClipboard = async (text: string) => {
     const textArea = document.createElement('textarea');
