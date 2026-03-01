@@ -4,9 +4,34 @@ The web server expects to use SSL certificates to run.
 
 The expected filenames are `furi-cert.pem` and `furi-key.key`. Alternatively, you can change the [docker-compose](../docker-compose.yml) file to specify different certificate files.
 
-This project uses a CDN layer before the web server, so technically the SSL could be a self-signed one. You have three different ways to generate the SSL files:
+This project uses a CDN layer before the web server, so technically the SSL could be a self-signed one. You have four different ways to generate the SSL files:
 
-## 1 - Using Certbot 🤖
+## 1 - Using mkcert (Recommended for local development) 🏠
+
+[mkcert](https://github.com/FiloSottile/mkcert) is the easiest way to generate locally-trusted certificates. It creates a local CA and installs it in your system's trust store, so browsers won't show any SSL warnings.
+
+Install mkcert:
+- **macOS**: `brew install mkcert`
+- **Linux**: `sudo apt install mkcert` or check the [mkcert releases](https://github.com/FiloSottile/mkcert/releases)
+- **Windows**: `choco install mkcert` or `winget install mkcert`
+
+After installing, set up the local CA (only needed once):
+```sh
+mkcert -install
+```
+
+Then generate the certificate:
+```sh
+mkcert localhost 127.0.0.1 ::1 "*.local" "*.furi.local" "furi.local"
+```
+
+Rename the generated files to match the expected filenames:
+```sh
+mv localhost+5.pem furi-cert.pem
+mv localhost+5-key.pem furi-key.key
+```
+
+## 2 - Using Certbot 🤖
 
 This is the best free way to generate SSL certificates because you can generate a valid wildcard SSL, and you will not encounter any browser issues related to accessing insecure content.
 
@@ -14,7 +39,7 @@ This method requires a domain and a server with a public IP (e.g., VPS).
 
 The instructions to generate certificates depend on the system used. You can check the tutorial [here](https://certbot.eff.org/instructions)
 
-## 2 - Using Cloudflare SSL ☁️
+## 3 - Using Cloudflare SSL ☁️
 
 This is the easiest method and requires a domain.
 
@@ -24,7 +49,7 @@ These certificates are valid only when accessed through Cloudflare, so you may e
 
 This [tutorial](https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/) explain the process with more details.
 
-## 3 - Using Self Signed SSL 🖊️
+## 4 - Using Self Signed SSL 🖊️
 
 This method doesn't require anything other than the tools available on most systems.
 

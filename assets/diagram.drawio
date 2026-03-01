@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0" version="29.3.6">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0" version="29.6.0">
   <diagram id="6a731a19-8d31-9384-78a2-239565b7b9f0" name="Page-1">
-    <mxGraphModel dx="1375" dy="-48" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#FFFFFF" math="0" shadow="1" adaptiveColors="none">
+    <mxGraphModel dx="1146" dy="-178" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#FFFFFF" math="0" shadow="1" adaptiveColors="none">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -18,7 +18,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="oaGu5y_zX-QXOi4U40vD-8" connectable="0" parent="dEZm_ng8QWsbmra9nYXP-2167" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];rounded=1;" value="&lt;div&gt;analytics.furi.live&lt;/div&gt;" vertex="1">
+        <mxCell id="oaGu5y_zX-QXOi4U40vD-8" connectable="0" parent="dEZm_ng8QWsbmra9nYXP-2167" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];rounded=1;" value="furi analytics" vertex="1">
           <mxGeometry relative="1" x="-0.6881" y="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
@@ -51,7 +51,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="oaGu5y_zX-QXOi4U40vD-9" connectable="0" parent="dEZm_ng8QWsbmra9nYXP-2131" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];rounded=1;" value="www.furi.live" vertex="1">
+        <mxCell id="oaGu5y_zX-QXOi4U40vD-9" connectable="0" parent="dEZm_ng8QWsbmra9nYXP-2131" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];rounded=1;" value="furi web" vertex="1">
           <mxGeometry relative="1" x="-0.7991" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
@@ -141,9 +141,9 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="oaGu5y_zX-QXOi4U40vD-5" connectable="0" parent="dEZm_ng8QWsbmra9nYXP-2171" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];rounded=1;" value="&amp;nbsp;furi.live " vertex="1">
+        <mxCell id="oaGu5y_zX-QXOi4U40vD-5" connectable="0" parent="dEZm_ng8QWsbmra9nYXP-2171" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];rounded=1;" value="furi api" vertex="1">
           <mxGeometry relative="1" x="-0.8482" y="1" as="geometry">
-            <mxPoint x="14" y="1" as="offset" />
+            <mxPoint x="22" y="1" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="dEZm_ng8QWsbmra9nYXP-2172" edge="1" parent="1" source="dEZm_ng8QWsbmra9nYXP-2169" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;curved=1;" target="dEZm_ng8QWsbmra9nYXP-2090">

@@ -65,14 +65,6 @@ Then start all services using Docker Compose:
 docker compose up -d
 ```
 
-The web server will start by default in port `8443`.
-
-A tip is edit your `/etc/hosts` to point every service hostname to your localhost, so you can simulate access using the domain name like:
-
-```
-127.0.0.1 redis postgres timescaledb furi.live www.furi.live
-```
-
 ### 🛠️ Useful Tools
 
 To access `postgres` (URLs database), execute
