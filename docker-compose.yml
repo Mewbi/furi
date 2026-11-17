@@ -4,6 +4,7 @@ services:
   redis:
     image: redis:latest
     container_name: furi_redis
+    restart: always
     ports:
       - "127.0.0.1:6379:6379"
     networks:
@@ -12,6 +13,7 @@ services:
   postgres:
     image: postgres
     container_name: furi_postgres
+    restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -24,6 +26,7 @@ services:
   timescaledb:
     image: timescale/timescaledb:latest-pg16
     container_name: furi_timescaledb
+    restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${TIMESCALE_USER} -d ${TIMESCALE_DB}"]
       interval: 5s
